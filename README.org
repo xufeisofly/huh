@@ -1,0 +1,38 @@
+** API
+
+   #+BEGIN_SRC go
+   user := User{ID: 1, Name: "Trump"}
+   ctx := context.TODO()
+
+   o = huh.New()
+
+   // Create
+   o.Create().Of(ctx, &user)
+   o.MustCreate().Of(ctx, &user)
+
+   // Save
+   user.Name = "Obama"
+   o.Save().Of(ctx, &user)
+
+   // Update with validation and callbacks
+   o.Update("ID", 2, "Name": "Obama").Of(ctx, &user)
+   o.Update(map[string]interface{}{"ID": 2, "Name": "Obama"}).Of(ctx, &user)
+   o.MustUpdate(ctx, &user, "ID", 2, "Name": "Obama")
+
+   // no validation, no callbacks
+   o.Update("ID", 2, "Name": "Obama").WithoutCallBacks().Of(ctx, &user)
+   o.Update("ID", 2, "Name": "Obama").Of(ctx, User{})
+
+   // Delete
+   o.Destroy().Of(ctx, &user)
+   o.MustDestroy().Of(ctx, &user)
+   o.Destroy().Of(ctx, User{})
+   o.Where("Name = ", "Trump").Destroy().Of(ctx, User{})
+
+   // Query
+   o.Get(1).Of(ctx, &user)
+   o.GetBy("Name", "Trump", "ID", 1).Of(ctx, &user)
+   o.Where("Name = ", "Trump").Of(ctx, []&user)
+
+   o.Select('name').Find(1).Of(ctx, &user)
+   #+END_SRC

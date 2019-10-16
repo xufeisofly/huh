@@ -1,9 +1,17 @@
 ** API
 
    #+BEGIN_SRC go
+   huh.Config("mysql", huh.DBConfig{
+       Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	   Slaves: []string{
+	       "slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	   },
+   })
+
    user := User{ID: 1, Name: "Trump"}
    ctx := context.TODO()
 
+   
    o = huh.New()
 
    // Create
@@ -34,5 +42,10 @@
    o.GetBy("Name", "Trump", "ID", 1).Of(ctx, &user)
    o.Where("Name = ", "Trump").Of(ctx, []&user)
 
-   o.Select('name').Find(1).Of(ctx, &user)
+   o.Select('name').Get(1).Of(ctx, &user)
+
+   // Callbacks
+   func (u *User) BeforeCreate(ctx) error {
+       return nil
+   }
    #+END_SRC

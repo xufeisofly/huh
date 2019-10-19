@@ -1,6 +1,9 @@
 package huh
 
-import "context"
+import (
+	"context"
+	"reflect"
+)
 
 // Orm is the base struct
 type Orm struct {
@@ -9,8 +12,8 @@ type Orm struct {
 
 	callbacks []Callback
 	model     *Model
-	// operator  Operator
-	ast *AST
+	operator  Operator
+	statement SQLStatement
 }
 
 // New initialize a Orm struct
@@ -27,6 +30,7 @@ func (o *Orm) Close() error {
 
 func (o *Orm) Create() *Orm {
 	c := o.clone()
+	c.operator = OperatorCreate
 	return c
 }
 
@@ -36,15 +40,46 @@ func (o *Orm) clone() *Orm {
 		slaveDBs:  o.slaveDBs,
 		callbacks: o.callbacks,
 		model:     o.model,
-		ast:       o.ast,
 	}
 }
 
 func (o *Orm) Of(ctx context.Context, in interface{}) error {
 	c := o.clone()
-	c.model.Model = in
+	c.model = GetModel(in)
+
+	statement, err := c.parseSQLStatement()
+	c.statement = statement
+
+	return err
 }
 
 func (o *Orm) CallMethod(methodName string) error {
+	ctx := context.Background()
+	var argsValue []reflect.Value
+
+	if methodValue := o.model.Value.MethodByName(methodName); methodValue.IsValid() {
+		switch methodValue.Interface().(type) {
+		case func(context.Context) error: // BeforeCreate
+			argsValue = []reflect.Value{reflect.ValueOf(ctx)}
+			result := methodValue.Call(argsValue)
+
+			return result[0].Interface().(error)
+		default:
+			return ErrMethodNotFound
+		}
+	}
 	return nil
+}
+
+func (o *Orm) parseSQLStatement() (SQLStatement, error) {
+	switch o.operator {
+	case OperatorCreate:
+		return InsertStatement{
+			TableName: o.model.TableName,
+			Columns:   o.model.Columns(),
+			Values:    o.model.Values(),
+		}, nil
+	default:
+		return nil, ErrInvalidOperator
+	}
 }

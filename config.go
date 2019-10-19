@@ -28,5 +28,5 @@ func Config(dialect string, dbConfig DBConfig) {
 		currentDB = &huhDB{*db}
 		return
 	}
-	panic(DialectNotSupportedErr)
+	panic(ErrDialectNotSupported)
 }

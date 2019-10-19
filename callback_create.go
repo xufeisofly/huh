@@ -13,15 +13,32 @@ func init() {
 }
 
 var BeforeCreateHandler = func(ctx context.Context, o *Orm) error {
-	o.CallMethod("BeforeCreate")
+	return o.CallMethod("BeforeCreate")
+}
+
+var BeginTransactionHandler = func(ctx context.Context, o *Orm) error {
+	// TODO begin
 	return nil
 }
 
-type User struct {
-	ID uint
+var BeforeSaveHandler = func(ctx context.Context, o *Orm) error {
+	return o.CallMethod("BeforeSave")
 }
 
-func (u *User) BeforeCreate(ctx context.Context) error {
-	// xxx
+var CreateHandler = func(ctx context.Context, o *Orm) error {
+	// Create
+	return nil
+}
+
+var AfterSaveHandler = func(ctx context.Context, o *Orm) error {
+	return o.CallMethod("AfterSave")
+}
+
+var AfterCreateHandler = func(ctx context.Context, o *Orm) error {
+	return o.CallMethod("AfterCreate")
+}
+
+var CommitOrRollbackTransactionHandler = func(ctx context.Context, o *Orm) error {
+	// Commit
 	return nil
 }

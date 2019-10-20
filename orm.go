@@ -47,7 +47,21 @@ func (o *Orm) clone() *Orm {
 
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)
-	err := c.do(ctx)
+	err := c.callCallbacks(ctx)
+	// err := o.Exec(c.String())
+	return err
+}
+
+func (o *Orm) callCallbacks(ctx context.Context) error {
+	var cb *Callback
+	switch o.operator {
+	case OperatorCreate:
+		cb = createCallback
+	default:
+		return ErrInvalidOperator
+	}
+
+	err := cb.processor.Process(ctx, o)
 	return err
 }
 
@@ -62,24 +76,29 @@ func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 	return c
 }
 
-func (o *Orm) String() string {
-	return o.statement.String()
+func (o *Orm) Exec(rawSQL string) error {
+	_, err := o.masterDB.Exec(rawSQL)
+	return err
 }
 
-func (o *Orm) do(ctx context.Context) error {
-	return nil
+func (o *Orm) String() string {
+	return o.statement.String()
 }
 
 func (o *Orm) CallMethod(methodName string) error {
 	ctx := context.Background()
 	var argsValue []reflect.Value
+	var result []reflect.Value
 
 	if methodValue := o.model.Value.MethodByName(methodName); methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func(context.Context) error: // BeforeCreate
 			argsValue = []reflect.Value{reflect.ValueOf(ctx)}
-			result := methodValue.Call(argsValue)
+			result = methodValue.Call(argsValue)
 
+			if result[0].Interface() == interface{}(nil) {
+				return nil
+			}
 			return result[0].Interface().(error)
 		default:
 			return ErrMethodNotFound

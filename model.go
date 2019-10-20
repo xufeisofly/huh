@@ -1,6 +1,9 @@
 package huh
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 type Model struct {
 	TableName string
@@ -35,7 +38,7 @@ func GetModel(in interface{}) *Model {
 	return &Model{
 		TableName: name,
 		Fields:    fields,
-		Value:     reflectValue,
+		Value:     reflect.ValueOf(in),
 	}
 }
 
@@ -67,7 +70,7 @@ func getTableName(in interface{}) (string, error) {
 func (m *Model) Columns() []string {
 	var columns []string
 	for _, field := range m.Fields {
-		columns = append(columns, field.Name)
+		columns = append(columns, strings.ToLower(field.Name))
 	}
 	return columns
 }

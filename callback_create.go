@@ -2,43 +2,64 @@ package huh
 
 import "context"
 
+var createCallback *Callback
+
 func init() {
-	DefaultCallback.Create().Register(BeginTransactionHandler)
-	DefaultCallback.Create().Register(BeforeCreateHandler)
-	DefaultCallback.Create().Register(BeforeSaveHandler)
-	DefaultCallback.Create().Register(CreateHandler)
-	DefaultCallback.Create().Register(AfterSaveHandler)
-	DefaultCallback.Create().Register(AfterCreateHandler)
-	DefaultCallback.Create().Register(CommitOrRollbackTransactionHandler)
+	createCallback = DefaultCallback.Create()
+	createCallback.processor.Register(BeginTransactionHandler)
+	createCallback.processor.Register(BeforeCreateHandler)
+	createCallback.processor.Register(BeforeSaveHandler)
+	createCallback.processor.Register(CreateHandler)
+	createCallback.processor.Register(AfterSaveHandler)
+	createCallback.processor.Register(AfterCreateHandler)
+	createCallback.processor.Register(CommitOrRollbackTransactionHandler)
 }
 
-var BeforeCreateHandler = func(ctx context.Context, o *Orm) error {
+func BeforeCreateHandler(ctx context.Context, o *Orm) error {
 	return o.CallMethod("BeforeCreate")
 }
 
-var BeginTransactionHandler = func(ctx context.Context, o *Orm) error {
+func BeginTransactionHandler(ctx context.Context, o *Orm) error {
 	// TODO begin
 	return nil
 }
 
-var BeforeSaveHandler = func(ctx context.Context, o *Orm) error {
+func BeforeSaveHandler(ctx context.Context, o *Orm) error {
 	return o.CallMethod("BeforeSave")
 }
 
-var CreateHandler = func(ctx context.Context, o *Orm) error {
-	// Create
-	return nil
+func CreateHandler(ctx context.Context, o *Orm) error {
+	err := o.Exec(o.String())
+	return err
 }
 
-var AfterSaveHandler = func(ctx context.Context, o *Orm) error {
+func AfterSaveHandler(ctx context.Context, o *Orm) error {
 	return o.CallMethod("AfterSave")
 }
 
-var AfterCreateHandler = func(ctx context.Context, o *Orm) error {
+func AfterCreateHandler(ctx context.Context, o *Orm) error {
 	return o.CallMethod("AfterCreate")
 }
 
-var CommitOrRollbackTransactionHandler = func(ctx context.Context, o *Orm) error {
+func CommitOrRollbackTransactionHandler(ctx context.Context, o *Orm) error {
 	// Commit
+	return nil
+}
+
+type CreateCallbackProcessor struct {
+	Handlers []CallbackHandler
+}
+
+func (cp *CreateCallbackProcessor) Register(handler CallbackHandler) {
+	cp.Handlers = append(cp.Handlers, handler)
+}
+
+func (cp *CreateCallbackProcessor) Process(ctx context.Context, o *Orm) error {
+	for _, handler := range cp.Handlers {
+		err := handler(ctx, o)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -18,7 +18,7 @@ type InsertStatement struct {
 func (is InsertStatement) String() string {
 	var strValues []string
 	for _, v := range is.Values {
-		strValues = append(strValues, fmt.Sprintf("%v", v))
+		strValues = append(strValues, fmt.Sprintf("'%v'", v))
 	}
 
 	return fmt.Sprintf(

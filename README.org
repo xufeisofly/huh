@@ -15,37 +15,41 @@
    o = huh.New()
 
    // Create
-   o.Create().Of(ctx, &user)
-   o.MustCreate().Of(ctx, &user)
+   o.Create().Do(ctx, &user)
+   o.MustCreate().Do(ctx, &user)
 
    // Save
    user.Name = "Obama"
-   o.Save().Of(ctx, &user)
+   o.Save().Do(ctx, &user)
 
    // Update with validation and callbacks
-   o.Update("ID", 2, "Name": "Obama").Of(ctx, &user)
-   o.Update(map[string]interface{}{"ID": 2, "Name": "Obama"}).Of(ctx, &user)
+   o.Update("ID", 2, "Name": "Obama").Do(ctx, &user)
+   o.Update(map[string]interface{}{"ID": 2, "Name": "Obama"}).Do(ctx, &user)
    o.MustUpdate(ctx, &user, "ID", 2, "Name": "Obama")
 
    // no validation, no callbacks
-   o.Update("ID", 2, "Name": "Obama").WithoutCallBacks().Of(ctx, &user)
-   o.Update("ID", 2, "Name": "Obama").Of(ctx, User{})
+   o.Update("ID", 2, "Name": "Obama").WithoutCallBacks().Do(ctx, &user)
+   o.Update("ID", 2, "Name": "Obama").Do(ctx, User{})
 
    // Delete
-   o.Destroy().Of(ctx, &user)
-   o.MustDestroy().Of(ctx, &user)
-   o.Destroy().Of(ctx, User{})
-   o.Where("Name = ", "Trump").Destroy().Of(ctx, User{})
+   o.Destroy().Do(ctx, &user)
+   o.MustDestroy().Do(ctx, &user)
+   o.Destroy().Do(ctx, User{})
+   o.Where("Name = ", "Trump").Destroy().Do(ctx, User{})
 
    // Query
-   o.Get(1).Of(ctx, &user)
-   o.GetBy("Name", "Trump", "ID", 1).Of(ctx, &user)
-   o.Where("Name = ", "Trump").Of(ctx, []&user)
+   o.Get(1).Do(ctx, &user)
+   o.GetBy("Name", "Trump", "ID", 1).Do(ctx, &user)
+   o.Where("Name = ", "Trump").Do(ctx, []&user)
 
-   o.Select('name').Get(1).Of(ctx, &user)
+   o.Select('name').Get(1).Do(ctx, &user)
 
    // Callbacks
    func (u *User) BeforeCreate(ctx) error {
        return nil
    }
+
+   // Raw SQL
+   fmt.Println(o.Create().Of(ctx, &user))
+   # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
    #+END_SRC

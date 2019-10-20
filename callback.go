@@ -3,27 +3,19 @@ package huh
 import "context"
 
 type Callback struct {
-	create *CallbackProcessor
+	processor CallbackProcessor
 }
 
 var DefaultCallback = &Callback{}
 
-type CallbackProcessor struct {
-	ttype    string
-	handlers []CallbackHandler
+type CallbackProcessor interface {
+	Register(CallbackHandler)
+	Process(context.Context, *Orm) error
 }
 
 type CallbackHandler func(context.Context, *Orm) error
 
-func (c *Callback) Create() *CallbackProcessor {
-	if c.create == nil {
-		c.create = &CallbackProcessor{
-			ttype: "create",
-		}
-	}
-	return c.create
-}
-
-func (cp *CallbackProcessor) Register(handler CallbackHandler) {
-	cp.handlers = append(cp.handlers, handler)
+func (c *Callback) Create() *Callback {
+	c.processor = &CreateCallbackProcessor{}
+	return c
 }

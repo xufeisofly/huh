@@ -18,11 +18,11 @@ type InsertStatement struct {
 func (is InsertStatement) String() string {
 	var strValues []string
 	for _, v := range is.Values {
-		strValues = append(strValues, v.(string))
+		strValues = append(strValues, fmt.Sprintf("%v", v))
 	}
 
 	return fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES (%s)",
+		"INSERT INTO %s (%v) VALUES (%v)",
 		is.TableName,
 		strings.Join(is.Columns, ","),
 		strings.Join(strValues, ","),

@@ -30,3 +30,8 @@ func Config(dialect string, dbConfig DBConfig) {
 	}
 	panic(ErrDialectNotSupported)
 }
+
+// Close DB connection
+func Close() error {
+	return currentDB.Close()
+}

@@ -9,23 +9,25 @@ type Model struct {
 }
 
 func GetModel(in interface{}) *Model {
-	reflectValue := reflect.ValueOf(in)
-	reflectType := reflectValue.Type()
+	reflectType := reflect.TypeOf(in)
 
 	var name string
-	if reflectType.Kind() == reflect.Ptr {
-		name = reflectType.Elem().Name()
-	} else {
-		name = reflectType.Name()
-	}
+	name, err := getTableName(in)
+	checkError(err)
 
 	var fields []*Field
+	var reflectValue reflect.Value
+	if reflectType.Kind() == reflect.Ptr {
+		reflectValue = reflect.ValueOf(in).Elem()
+	} else {
+		reflectValue = reflect.ValueOf(in)
+	}
 
 	for i := 0; i < reflectValue.NumField(); i++ {
 		field := &Field{
-			Name:   reflectType.Field(i).Name,
+			Name:   reflectValue.Type().Field(i).Name,
 			Value:  reflectValue.Field(i).Interface(),
-			TagMap: parseTagMap(reflectType.Field(i).Tag),
+			TagMap: parseTagMap(reflectValue.Type().Field(i).Tag),
 		}
 		fields = append(fields, field)
 	}
@@ -35,6 +37,31 @@ func GetModel(in interface{}) *Model {
 		Fields:    fields,
 		Value:     reflectValue,
 	}
+}
+
+func getTableName(in interface{}) (string, error) {
+	var tableName string
+
+	reflectValue := reflect.ValueOf(in)
+	if methodValue := reflectValue.MethodByName("TableName"); methodValue.IsValid() {
+		switch methodValue.Interface().(type) {
+		case func() string:
+			result := methodValue.Call([]reflect.Value{})
+			tableName = result[0].Interface().(string)
+		default:
+			tableName = ""
+		}
+	}
+
+	reflectType := reflect.TypeOf(in)
+	if tableName == "" {
+		if reflectType.Kind() == reflect.Ptr {
+			tableName = reflectType.Elem().Name()
+		} else {
+			tableName = reflectType.Name()
+		}
+	}
+	return tableName, nil
 }
 
 func (m *Model) Columns() []string {

@@ -40,17 +40,34 @@ func (o *Orm) clone() *Orm {
 		slaveDBs:  o.slaveDBs,
 		callbacks: o.callbacks,
 		model:     o.model,
+		operator:  o.operator,
+		statement: o.statement,
 	}
 }
 
-func (o *Orm) Of(ctx context.Context, in interface{}) error {
+func (o *Orm) Do(ctx context.Context, in interface{}) error {
+	c := o.Of(ctx, in)
+	err := c.do(ctx)
+	return err
+}
+
+func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 	c := o.clone()
 	c.model = GetModel(in)
 
 	statement, err := c.parseSQLStatement()
+	checkError(err)
 	c.statement = statement
 
-	return err
+	return c
+}
+
+func (o *Orm) String() string {
+	return o.statement.String()
+}
+
+func (o *Orm) do(ctx context.Context) error {
+	return nil
 }
 
 func (o *Orm) CallMethod(methodName string) error {

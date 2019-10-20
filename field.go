@@ -13,8 +13,11 @@ type Field struct {
 }
 
 func parseTagMap(tags reflect.StructTag) map[string]string {
-	var tagMap map[string]string
+	tagMap := make(map[string]string)
 	tagStr := tags.Get("huh")
+	if tagStr == "" {
+		return tagMap
+	}
 
 	tagItems := strings.Split(tagStr, ";")
 	for _, tag := range tagItems {

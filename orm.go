@@ -34,34 +34,25 @@ func (o *Orm) Create() *Orm {
 	return c
 }
 
-func (o *Orm) clone() *Orm {
-	return &Orm{
-		masterDB:  o.masterDB,
-		slaveDBs:  o.slaveDBs,
-		callbacks: o.callbacks,
-		model:     o.model,
-		operator:  o.operator,
-		statement: o.statement,
+func (o *Orm) Update(args ...interface{}) *Orm {
+	var mapArg map[string]interface{}
+	if len(args) != 1 {
+		mapArg = multiArgsToMap(args)
+	} else {
+		mapArg = args[0].(map[string]interface{})
 	}
+	return o.update(mapArg)
+}
+
+func (o *Orm) update(arg map[string]interface{}) *Orm {
+	c := o.clone()
+	c.operator = OperatorUpdate
+	return c
 }
 
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)
 	err := c.callCallbacks(ctx)
-	// err := o.Exec(c.String())
-	return err
-}
-
-func (o *Orm) callCallbacks(ctx context.Context) error {
-	var cb *Callback
-	switch o.operator {
-	case OperatorCreate:
-		cb = createCallback
-	default:
-		return ErrInvalidOperator
-	}
-
-	err := cb.processor.Process(ctx, o)
 	return err
 }
 
@@ -107,6 +98,30 @@ func (o *Orm) CallMethod(methodName string) error {
 	return nil
 }
 
+func (o *Orm) clone() *Orm {
+	return &Orm{
+		masterDB:  o.masterDB,
+		slaveDBs:  o.slaveDBs,
+		callbacks: o.callbacks,
+		model:     o.model,
+		operator:  o.operator,
+		statement: o.statement,
+	}
+}
+
+func (o *Orm) callCallbacks(ctx context.Context) error {
+	var cb *Callback
+	switch o.operator {
+	case OperatorCreate:
+		cb = createCallback
+	default:
+		return ErrInvalidOperator
+	}
+
+	err := cb.processor.Process(ctx, o)
+	return err
+}
+
 func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 	switch o.operator {
 	case OperatorCreate:
@@ -115,6 +130,8 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 			Columns:   o.model.Columns(),
 			Values:    o.model.Values(),
 		}, nil
+	case OperatorUpdate:
+		return UpdateStatement{}, nil
 	default:
 		return nil, ErrInvalidOperator
 	}

@@ -57,7 +57,7 @@ func TestCreate(t *testing.T) {
 
 	o := huh.New()
 	ctx := huh.Context()
-	user := User{ID: 1, Email: "test@huh.com"}
+	user := User{Email: "test@huh.com", ID: 1}
 
 	// test create raw sql
 	c := o.Create().Of(ctx, &user)
@@ -82,5 +82,6 @@ func TestCreate(t *testing.T) {
 func TestMain(m *testing.M) {
 	setup()
 	defer tearDown()
+
 	os.Exit(m.Run())
 }

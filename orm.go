@@ -3,6 +3,7 @@ package huh
 import (
 	"context"
 	"reflect"
+	"strings"
 )
 
 // Orm is the base struct
@@ -36,9 +37,9 @@ func (o *Orm) Create() *Orm {
 }
 
 func (o *Orm) Update(args ...interface{}) *Orm {
-	var mapArg map[string]interface{}
+	mapArg := make(map[string]interface{})
 	if len(args) != 1 {
-		mapArg = multiArgsToMap(args)
+		mapArg = multiArgsToMap(args...)
 	} else {
 		mapArg = args[0].(map[string]interface{})
 	}
@@ -139,7 +140,7 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 	case OperatorUpdate:
 		return UpdateStatement{
 			TableName:    o.model.TableName,
-			PrimaryKey:   o.model.PrimaryField.Name,
+			PrimaryKey:   strings.ToLower(o.model.PrimaryField.Name),
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
 		}, nil

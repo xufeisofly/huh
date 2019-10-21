@@ -77,6 +77,16 @@ func TestCreate(t *testing.T) {
 	if err := o.Create().Do(ctx, &user2); err == nil {
 		t.Errorf("CreateBefore hook should have error")
 	}
+
+	err = o.Update("email", "update@huh.com").Do(ctx, &user)
+	if err != nil {
+		t.Errorf("update error: %s", err)
+	}
+
+	// err = o.Where(map[string]interface{}{"email": "update@huh.com"}).Update("email", "update2@huh.com").Do(ctx, User{})
+	// if err != nil {
+	// 	t.Errorf("update error: %s", err)
+	// }
 }
 
 func TestMain(m *testing.M) {

@@ -38,7 +38,7 @@ func (ws WhereStatement) String() string {
 	// column1 = 1 AND column2 = 2
 	var str = ws.Condition
 	for _, v := range ws.Values {
-		str = strings.Replace(str, "?", v.(string), 1)
+		str = strings.Replace(str, "?", fmt.Sprintf("'%v'", v), 1)
 	}
 	return str
 }
@@ -55,7 +55,7 @@ func (us UpdateStatement) String() string {
 	// UPDATE `users` SET column = 1, column = 2 WHERE column1 = 1 AND column2 = 2
 	var columnValueStrs []string
 	for k, v := range us.Values {
-		columnValueStrs = append(columnValueStrs, fmt.Sprintf("%s = %v", k, v))
+		columnValueStrs = append(columnValueStrs, fmt.Sprintf("%s = '%v'", k, v))
 	}
 
 	if len(us.WS.Values) != 0 { // Use where first
@@ -65,12 +65,12 @@ func (us UpdateStatement) String() string {
 			strings.Join(columnValueStrs, ","),
 			us.WS.String(),
 		)
-	} else if us.PrimaryValue == nil { // Use model primary key second
+	} else if us.PrimaryValue != nil { // Use model primary key second
 		return fmt.Sprintf(
 			"UPDATE `%s` SET %s WHERE %s",
 			us.TableName,
 			strings.Join(columnValueStrs, ","),
-			fmt.Sprintf("%s = %v", us.PrimaryKey, us.PrimaryValue),
+			fmt.Sprintf("%s = '%v'", us.PrimaryKey, us.PrimaryValue),
 		)
 	} else {
 		return ""

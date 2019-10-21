@@ -7,9 +7,10 @@ import (
 
 // Field ...
 type Field struct {
-	Name   string
-	Value  interface{}
-	TagMap map[string]string
+	Name         string
+	Value        interface{}
+	TagMap       map[string]string
+	IsPrimaryKey bool
 }
 
 func parseTagMap(tags reflect.StructTag) map[string]string {

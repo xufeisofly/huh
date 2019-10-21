@@ -14,6 +14,7 @@ type Orm struct {
 	model     *Model
 	operator  Operator
 	statement SQLStatement
+	newValues map[string]interface{}
 }
 
 // New initialize a Orm struct
@@ -47,6 +48,8 @@ func (o *Orm) Update(args ...interface{}) *Orm {
 func (o *Orm) update(arg map[string]interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorUpdate
+	c.newValues = arg
+
 	return c
 }
 
@@ -106,6 +109,7 @@ func (o *Orm) clone() *Orm {
 		model:     o.model,
 		operator:  o.operator,
 		statement: o.statement,
+		newValues: o.newValues,
 	}
 }
 
@@ -131,7 +135,12 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 			Values:    o.model.Values(),
 		}, nil
 	case OperatorUpdate:
-		return UpdateStatement{}, nil
+		return UpdateStatement{
+			TableName:    o.model.TableName,
+			PrimaryKey:   o.model.PrimaryKey,
+			PrimaryValue: o.model.PrimaryValue(),
+			Values:       o.newValues,
+		}, nil
 	default:
 		return nil, ErrInvalidOperator
 	}

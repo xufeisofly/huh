@@ -10,7 +10,7 @@ import (
 )
 
 type User struct {
-	ID    uint32
+	ID    uint32 `huh:"pk"`
 	Email string
 }
 

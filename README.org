@@ -54,3 +54,16 @@
    fmt.Println(o.Create().Of(ctx, &user))
    # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
    #+END_SRC
+
+** TODOs
+
+**** DONE create
+**** TODO update
+**** TODO get
+**** TODO destroy
+**** TODO count
+**** TODO order by and group by
+**** TODO stability in various conditions
+**** TODO code enhancement
+**** TODO annotation
+

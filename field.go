@@ -25,7 +25,7 @@ func parseTagMap(tags reflect.StructTag) map[string]string {
 		v := strings.Split(tag, ":")
 		k := strings.TrimSpace(strings.ToUpper(v[0]))
 
-		if len(v[1]) == 0 {
+		if len(v) == 1 {
 			tagMap[k] = k
 		} else {
 			tagMap[k] = v[1]

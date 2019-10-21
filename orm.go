@@ -118,6 +118,8 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 	switch o.operator {
 	case OperatorCreate:
 		cb = createCallback
+	case OperatorUpdate:
+		cb = updateCallback
 	default:
 		return ErrInvalidOperator
 	}
@@ -137,8 +139,8 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 	case OperatorUpdate:
 		return UpdateStatement{
 			TableName:    o.model.TableName,
-			PrimaryKey:   o.model.PrimaryKey,
-			PrimaryValue: o.model.PrimaryValue(),
+			PrimaryKey:   o.model.PrimaryField.Name,
+			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
 		}, nil
 	default:

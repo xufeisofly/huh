@@ -37,8 +37,8 @@ func GetModel(in interface{}) *Model {
 		isPrimaryKey = false
 		tagMap = parseTagMap(reflectValue.Type().Field(i).Tag)
 		// check isPrimaryKey
-		for k, v := range tagMap {
-			if k == "pk" || k == "primary_key" {
+		for k, _ := range tagMap {
+			if k == "PK" {
 				isPrimaryKey = true
 			}
 		}
@@ -55,8 +55,6 @@ func GetModel(in interface{}) *Model {
 		fields = append(fields, field)
 	}
 
-	// get primary key
-	primaryKey, err := getPrimaryKey(in)
 	checkError(err)
 
 	return &Model{

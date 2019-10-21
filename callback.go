@@ -16,6 +16,19 @@ type CallbackProcessor interface {
 type CallbackHandler func(context.Context, *Orm) error
 
 func (c *Callback) Create() *Callback {
-	c.processor = &CreateCallbackProcessor{}
-	return c
+	cc := c.clone()
+	cc.processor = &CreateCallbackProcessor{}
+	return cc
+}
+
+func (c *Callback) Update() *Callback {
+	cc := c.clone()
+	cc.processor = &UpdateCallbackProcessor{}
+	return cc
+}
+
+func (c *Callback) clone() *Callback {
+	return &Callback{
+		processor: c.processor,
+	}
 }

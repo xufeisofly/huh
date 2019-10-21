@@ -58,9 +58,11 @@
 ** TODOs
 
 **** DONE create
+**** TODO create callback transaction
 **** TODO update
 **** TODO get
 **** TODO destroy
+**** TODO transaction
 **** TODO count
 **** TODO order by and group by
 **** TODO stability in various conditions

@@ -14,7 +14,7 @@ type User struct {
 	Email string
 }
 
-func (u *User) TableName() string {
+func (u User) TableName() string {
 	return "users"
 }
 
@@ -79,15 +79,17 @@ func TestCreate(t *testing.T) {
 		t.Errorf("CreateBefore hook should have error")
 	}
 
+	// test update
 	err = o.Update("email", "update@huh.com").Do(ctx, &user)
 	if err != nil {
 		t.Errorf("update error: %s", err)
 	}
 
-	// err = o.Where(map[string]interface{}{"email": "update@huh.com"}).Update("email", "update2@huh.com").Do(ctx, User{})
-	// if err != nil {
-	// 	t.Errorf("update error: %s", err)
-	// }
+	// test update_all with where
+	err = o.Where("email = ?", "update@huh.com").Update("email", "update2@huh.com").Do(ctx, User{})
+	if err != nil {
+		t.Errorf("update error: %s", err)
+	}
 
 	// test transaction
 	user3 := User{ID: 3, Email: "test3@huh.com"}

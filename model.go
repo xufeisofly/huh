@@ -23,8 +23,6 @@ func GetModel(in interface{}) *Model {
 	var isPrimaryKey bool
 
 	reflectType := reflect.TypeOf(in)
-	name, err := getTableName(in)
-	checkError(err)
 
 	if reflectType.Kind() == reflect.Ptr {
 		reflectValue = reflect.ValueOf(in).Elem()
@@ -32,6 +30,8 @@ func GetModel(in interface{}) *Model {
 		reflectValue = reflect.ValueOf(in)
 	}
 
+	name, err := getTableName(reflectValue, reflectType)
+	checkError(err)
 	// get fields
 	for i := 0; i < reflectValue.NumField(); i++ {
 		isPrimaryKey = false
@@ -70,10 +70,9 @@ func getPrimaryKey(in interface{}) (string, error) {
 	return defaultPrimaryKey, nil
 }
 
-func getTableName(in interface{}) (string, error) {
+func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string, error) {
 	var tableName string
 
-	reflectValue := reflect.ValueOf(in)
 	if methodValue := reflectValue.MethodByName("TableName"); methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func() string:
@@ -82,9 +81,9 @@ func getTableName(in interface{}) (string, error) {
 		default:
 			tableName = ""
 		}
+		return tableName, nil
 	}
 
-	reflectType := reflect.TypeOf(in)
 	if tableName == "" {
 		if reflectType.Kind() == reflect.Ptr {
 			tableName = reflectType.Elem().Name()

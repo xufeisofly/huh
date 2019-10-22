@@ -66,6 +66,13 @@ func (o *Orm) update(arg map[string]interface{}) *Orm {
 	return c
 }
 
+func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
+	c := o.clone()
+	statement := WhereStatement{Condition: sqlStatement, Values: values}
+	c.statement = statement
+	return c
+}
+
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)
 	err := c.callCallbacks(ctx)

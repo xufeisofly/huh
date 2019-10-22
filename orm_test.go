@@ -52,8 +52,9 @@ func dropTable() {
 }
 
 func TestCreate(t *testing.T) {
+	dropTable()
 	createTable()
-	defer dropTable()
+	// defer dropTable()
 
 	o := huh.New()
 	ctx := huh.Context()
@@ -87,6 +88,13 @@ func TestCreate(t *testing.T) {
 	// if err != nil {
 	// 	t.Errorf("update error: %s", err)
 	// }
+
+	// test transaction
+	user3 := User{ID: 3, Email: "test3@huh.com"}
+	o.Transaction(ctx, func(h *huh.Orm) {
+		h.Create().Do(ctx, &user3)
+		h.MustCreate().Do(ctx, &user)
+	})
 }
 
 func TestMain(m *testing.M) {

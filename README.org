@@ -53,6 +53,13 @@
    // Raw SQL
    fmt.Println(o.Create().Of(ctx, &user))
    # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
+
+   // transaction
+   o.Transaction(ctx, function(){
+       o.MustCreate().Do(ctx, &user2)
+	   o.MustCreate().Do(ctx, &user)
+   })
+   
    #+END_SRC
 
 ** TODOs
@@ -65,7 +72,10 @@
 **** TODO transaction
 **** TODO count
 **** TODO order by and group by
+**** TODO master and slave DB
 **** TODO stability in various conditions
 **** TODO code enhancement
 **** TODO annotation
+**** TODO syncMutex
+**** TODO errors standard
 

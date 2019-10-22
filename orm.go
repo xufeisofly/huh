@@ -2,7 +2,6 @@ package huh
 
 import (
 	"context"
-	"database/sql"
 	"reflect"
 	"strings"
 )
@@ -12,7 +11,8 @@ type Orm struct {
 	masterDB *huhDB
 	slaveDBs []*huhDB
 	// transaction
-	tx *sql.Tx
+	tx      Tx
+	txCount int
 
 	callbacks []Callback
 	model     *Model
@@ -27,6 +27,7 @@ func New() *Orm {
 	return &Orm{
 		masterDB: currentDB,
 		must:     false,
+		txCount:  0,
 	}
 }
 
@@ -96,19 +97,39 @@ func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 
 func (o *Orm) Begin() *Orm {
 	c := o.clone()
-	tx, err := c.masterDB.Begin()
-	checkError(err)
 
-	c.tx = tx
+	// if already in transaction, just increment txCount
+	if c.inTransaction() {
+		c.txCount++
+		c.tx.parent = &c.tx
+	} else {
+		// flatify embedded transaction, add function to parentTx deferedTasks
+		// deferedTasks will be executed when the last commit called
+		// the deferedTask will be cleared when the its rollback called
+		tx, err := c.masterDB.Begin()
+		checkError(err)
+		c.tx.tx = tx
+	}
+
 	return c
 }
 
+func (o *Orm) inTransaction() bool {
+	return o.txCount > 0
+}
+
 func (o *Orm) Commit() error {
-	return o.tx.Commit()
+	if o.inTransaction() {
+		o.txCount--
+	}
+	return o.tx.tx.Commit()
 }
 
 func (o *Orm) Rollback() error {
-	return o.tx.Rollback()
+	if o.inTransaction() {
+		o.txCount--
+	}
+	return o.tx.tx.Rollback()
 }
 
 func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
@@ -126,8 +147,8 @@ func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 
 func (o *Orm) Exec(rawSQL string) error {
 	var err error
-	if o.tx != nil {
-		_, err = o.tx.Exec(rawSQL)
+	if o.tx.tx != nil {
+		_, err = o.tx.tx.Exec(rawSQL)
 	} else {
 		_, err = o.masterDB.Exec(rawSQL)
 	}
@@ -167,6 +188,7 @@ func (o *Orm) clone() *Orm {
 		callbacks: o.callbacks,
 		model:     o.model,
 		tx:        o.tx,
+		txCount:   o.txCount,
 		operator:  o.operator,
 		must:      o.must,
 		statement: o.statement,

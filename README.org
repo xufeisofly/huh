@@ -55,9 +55,17 @@
    # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
 
    // transaction
-   o.Transaction(ctx, function(o *huh.Orm){
+   o.Transaction(ctx, func(o *huh.Orm){
        o.MustCreate().Do(ctx, &user2)
 	   o.MustCreate().Do(ctx, &user)
+   })
+
+   o.Transaction(ctx, func(o2 *huh.Orm){
+       o2.MustCreate().Do(ctx, &user)
+
+	   o2.Transaction(ctx, func(o3 *huh.Orm){
+	       o3.MustCreate().Do(ctx, &user2)
+	   })
    })
    
    #+END_SRC

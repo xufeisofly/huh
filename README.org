@@ -55,7 +55,7 @@
    # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
 
    // transaction
-   o.Transaction(ctx, function(){
+   o.Transaction(ctx, function(o *huh.Orm){
        o.MustCreate().Do(ctx, &user2)
 	   o.MustCreate().Do(ctx, &user)
    })
@@ -66,10 +66,10 @@
 
 **** DONE create
 **** TODO create callback transaction
-**** TODO update
+**** TODO update updatewithwhere
 **** TODO get
 **** TODO destroy
-**** TODO transaction
+**** DONE transaction
 **** TODO count
 **** TODO order by and group by
 **** TODO master and slave DB

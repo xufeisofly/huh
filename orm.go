@@ -108,7 +108,7 @@ func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 	c := o.Begin()
 	defer func() {
 		if err := recover(); err != nil {
-			c.Rollback()
+			_ = c.Rollback()
 		}
 		err = c.Commit()
 	}()

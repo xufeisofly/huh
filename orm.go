@@ -67,6 +67,12 @@ func (o *Orm) update(arg map[string]interface{}) *Orm {
 	return c
 }
 
+func (o *Orm) Get(pk interface{}) *Orm {
+	c := o.clone()
+	c.operator = OperatorSelect
+	return c
+}
+
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 	statement := WhereStatement{Condition: sqlStatement, Values: values}
@@ -212,6 +218,11 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 }
 
 func (o *Orm) parseSQLStatement() (SQLStatement, error) {
+	var ws = WhereStatement{}
+	if o.statement != nil {
+		ws = o.statement.(WhereStatement)
+	}
+
 	switch o.operator {
 	case OperatorCreate:
 		return InsertStatement{
@@ -221,10 +232,18 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 		}, nil
 	case OperatorUpdate:
 		return UpdateStatement{
+			WS:           ws,
 			TableName:    o.model.TableName,
 			PrimaryKey:   strings.ToLower(o.model.PrimaryField.Name),
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
+		}, nil
+	case OperatorSelect:
+		return SelectStatement{
+			WS:           ws,
+			TableName:    o.model.TableName,
+			PrimaryKey:   strings.ToLower(o.model.PrimaryField.Name),
+			PrimaryValue: o.model.PrimaryField.Value,
 		}, nil
 	default:
 		return nil, ErrInvalidOperator

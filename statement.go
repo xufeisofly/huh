@@ -76,3 +76,16 @@ func (us UpdateStatement) String() string {
 		return ""
 	}
 }
+
+type SelectStatement struct {
+	WS           WhereStatement
+	TableName    string
+	PrimaryKey   string
+	PrimaryValue interface{}
+}
+
+func (ss SelectStatement) String() string {
+	// SELECT * FROM `users` WHERE id = 1
+	return fmt.Sprintf("SELECT * FROM `%s` WHERE %s")
+	return ""
+}

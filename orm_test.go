@@ -86,6 +86,8 @@ func TestCreate(t *testing.T) {
 	}
 
 	// test update_all with where
+	user4 := User{ID: 4, Email: "update@huh.com"}
+	o.Create().Do(ctx, &user4)
 	err = o.Where("email = ?", "update@huh.com").Update("email", "update2@huh.com").Do(ctx, User{})
 	if err != nil {
 		t.Errorf("update error: %s", err)

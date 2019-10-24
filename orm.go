@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // Orm is the base struct
@@ -73,6 +74,37 @@ func (o *Orm) Get(pk interface{}) *Orm {
 	c.operator = OperatorSelect
 
 	statement := WhereStatement{Values: []interface{}{pk}, ByPK: true, Limit: 1}
+	c.statement = statement
+	return c
+}
+
+func (o *Orm) GetBy(args ...interface{}) *Orm {
+	mapArg := make(map[string]interface{})
+	if len(args) != 1 {
+		mapArg = multiArgsToMap(args...)
+	} else {
+		mapArg = args[0].(map[string]interface{})
+	}
+	return o.getBy(mapArg)
+}
+
+func (o *Orm) getBy(arg map[string]interface{}) *Orm {
+	c := o.clone()
+	c.operator = OperatorSelect
+
+	var conditionArr []string
+	var values []interface{}
+	for k, v := range arg {
+		conditionArr = append(conditionArr, fmt.Sprintf("`%s` = ?", k))
+		values = append(values, v)
+	}
+
+	statement := WhereStatement{
+		Condition: strings.Join(conditionArr, " AND "),
+		Values:    values,
+		Limit:     1,
+		ByPK:      false,
+	}
 	c.statement = statement
 	return c
 }
@@ -234,6 +266,7 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 
 func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 	var ws = WhereStatement{}
+	// 如果此时已经存在 statement，则肯定是 WhereStatement，比较 hack，需要优化
 	if o.statement != nil {
 		ws = o.statement.(WhereStatement)
 	}

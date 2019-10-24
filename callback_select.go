@@ -43,8 +43,6 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 			results = append(results, ret)
 		}
 
-		fmt.Println(results)
-
 		err := o.setSelectResult(results[0])
 		return err
 	}

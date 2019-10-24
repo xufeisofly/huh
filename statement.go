@@ -89,13 +89,11 @@ type SelectStatement struct {
 
 func (ss SelectStatement) String() string {
 	// SELECT * FROM `users` WHERE id = 1
-	if ss.WS.ByPK {
-		// TODO * 这里需要改成指定顺序的 columns，防止 model 字段和数据库字段顺序不一致
-		return fmt.Sprintf(
-			"SELECT * FROM `%s` WHERE %s",
-			ss.TableName,
-			ss.WS.String(),
-		)
-	}
-	return ""
+	// TODO * 这里需要改成指定顺序的 columns，防止 model 字段和数据库字段顺序不一致
+	return fmt.Sprintf(
+		"SELECT * FROM `%s` WHERE %s",
+		ss.TableName,
+		ss.WS.String(),
+	)
+
 }

@@ -102,10 +102,28 @@ func TestCreate(t *testing.T) {
 
 	// test get by pk
 	user5 := User{}
-	o.Get(1).Do(ctx, &user5)
 	expected := User{ID: uint32(1), Email: "update2@huh.com"}
+	o.Get(1).Do(ctx, &user5)
 	if user5 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user5)
+	}
+
+	// test get by condition
+	user6 := User{}
+	expected = User{ID: uint32(4), Email: "update2@huh.com"}
+	o.GetBy("email", "update2@huh.com", "id", 4).Do(ctx, &user6)
+	if user6 != expected {
+		t.Errorf("get error, expected: %v, actual: %v", expected, user6)
+	}
+
+	user7 := User{}
+	expected = User{ID: uint32(1), Email: "update2@huh.com"}
+	o.GetBy(map[string]interface{}{
+		"id":    1,
+		"email": "update2@huh.com",
+	}).Do(ctx, &user7)
+	if user7 != expected {
+		t.Errorf("get error, expected: %v, actual: %v", expected, user7)
 	}
 }
 

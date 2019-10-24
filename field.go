@@ -11,6 +11,7 @@ type Field struct {
 	Value        interface{}
 	TagMap       map[string]string
 	IsPrimaryKey bool
+	ColName      string
 }
 
 func parseTagMap(tags reflect.StructTag) map[string]string {

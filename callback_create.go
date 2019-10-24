@@ -30,19 +30,4 @@ func AfterCreateHandler(ctx context.Context, o *Orm) error {
 
 type CreateCallbackProcessor struct {
 	CommonCallbackProcessor
-	// Handlers []CallbackHandler
 }
-
-// func (cp *CreateCallbackProcessor) Register(handler CallbackHandler) {
-// 	cp.Handlers = append(cp.Handlers, handler)
-// }
-
-// func (cp *CreateCallbackProcessor) Process(ctx context.Context, o *Orm) error {
-// 	for _, handler := range cp.Handlers {
-// 		err := handler(ctx, o)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }

@@ -99,6 +99,14 @@ func TestCreate(t *testing.T) {
 		h.Create().Do(ctx, &user3)
 		h.MustCreate().Do(ctx, &user)
 	})
+
+	// test get by pk
+	user5 := User{}
+	o.Get(1).Do(ctx, &user5)
+	expected := User{ID: uint32(1), Email: "update2@huh.com"}
+	if user5 != expected {
+		t.Errorf("get error, expected: %v, actual: %v", expected, user5)
+	}
 }
 
 func TestMain(m *testing.M) {

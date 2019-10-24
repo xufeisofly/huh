@@ -2,8 +2,9 @@ package huh
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"reflect"
-	"strings"
 )
 
 // Orm is the base struct
@@ -70,11 +71,15 @@ func (o *Orm) update(arg map[string]interface{}) *Orm {
 func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
+
+	statement := WhereStatement{Values: []interface{}{pk}, ByPK: true, Limit: 1}
+	c.statement = statement
 	return c
 }
 
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
+
 	statement := WhereStatement{Condition: sqlStatement, Values: values}
 	c.statement = statement
 	return c
@@ -94,7 +99,7 @@ func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 	c := o.clone()
 	c.model = GetModel(in)
 
-	statement, err := c.parseSQLStatement()
+	statement, err := c.parseSQLStatement(in)
 	checkError(err)
 	c.statement = statement
 
@@ -161,6 +166,14 @@ func (o *Orm) Exec(rawSQL string) error {
 	return err
 }
 
+func (o *Orm) QueryRow(rawSQL string) *sql.Row {
+	return o.masterDB.QueryRow(rawSQL)
+}
+
+func (o *Orm) Query(rawSQL string) (*sql.Rows, error) {
+	return o.masterDB.Query(rawSQL)
+}
+
 func (o *Orm) String() string {
 	return o.statement.String()
 }
@@ -209,6 +222,8 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 		cb = createCallback
 	case OperatorUpdate:
 		cb = updateCallback
+	case OperatorSelect:
+		cb = selectCallback
 	default:
 		return ErrInvalidOperator
 	}
@@ -217,7 +232,7 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 	return err
 }
 
-func (o *Orm) parseSQLStatement() (SQLStatement, error) {
+func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 	var ws = WhereStatement{}
 	if o.statement != nil {
 		ws = o.statement.(WhereStatement)
@@ -234,16 +249,21 @@ func (o *Orm) parseSQLStatement() (SQLStatement, error) {
 		return UpdateStatement{
 			WS:           ws,
 			TableName:    o.model.TableName,
-			PrimaryKey:   strings.ToLower(o.model.PrimaryField.Name),
+			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
 		}, nil
 	case OperatorSelect:
+		primaryKey := o.model.PrimaryField.ColName
+		if ws.ByPK {
+			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
+		}
 		return SelectStatement{
 			WS:           ws,
 			TableName:    o.model.TableName,
-			PrimaryKey:   strings.ToLower(o.model.PrimaryField.Name),
+			PrimaryKey:   primaryKey,
 			PrimaryValue: o.model.PrimaryField.Value,
+			Result:       in,
 		}, nil
 	default:
 		return nil, ErrInvalidOperator

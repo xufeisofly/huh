@@ -30,8 +30,10 @@ func (is InsertStatement) String() string {
 }
 
 type WhereStatement struct {
+	ByPK      bool
 	Condition string
 	Values    []interface{}
+	Limit     uint
 }
 
 func (ws WhereStatement) String() string {
@@ -82,10 +84,18 @@ type SelectStatement struct {
 	TableName    string
 	PrimaryKey   string
 	PrimaryValue interface{}
+	Result       interface{}
 }
 
 func (ss SelectStatement) String() string {
 	// SELECT * FROM `users` WHERE id = 1
-	return fmt.Sprintf("SELECT * FROM `%s` WHERE %s")
+	if ss.WS.ByPK {
+		// TODO * 这里需要改成指定顺序的 columns，防止 model 字段和数据库字段顺序不一致
+		return fmt.Sprintf(
+			"SELECT * FROM `%s` WHERE %s",
+			ss.TableName,
+			ss.WS.String(),
+		)
+	}
 	return ""
 }

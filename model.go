@@ -12,6 +12,8 @@ type Model struct {
 	Fields       []*Field
 	Value        reflect.Value
 	PrimaryField *Field
+
+	ColToFieldNameMap map[string]string
 }
 
 func GetModel(in interface{}) *Model {
@@ -21,6 +23,7 @@ func GetModel(in interface{}) *Model {
 	var tagMap map[string]string
 	var primaryField *Field
 	var isPrimaryKey bool
+	colToFieldNameMap := make(map[string]string)
 
 	reflectType := reflect.TypeOf(in)
 
@@ -36,19 +39,29 @@ func GetModel(in interface{}) *Model {
 	for i := 0; i < reflectValue.NumField(); i++ {
 		isPrimaryKey = false
 		tagMap = parseTagMap(reflectValue.Type().Field(i).Tag)
+		fieldName := reflectValue.Type().Field(i).Name
+		colName := strings.ToLower(fieldName)
 		// check isPrimaryKey
-		for k, _ := range tagMap {
+		for k, v := range tagMap {
 			if k == "PK" {
 				isPrimaryKey = true
+			}
+			if k == "COL" {
+				colName = v
 			}
 		}
 
 		field := &Field{
-			Name:         reflectValue.Type().Field(i).Name,
+			Name:         fieldName,
 			Value:        reflectValue.Field(i).Interface(),
 			TagMap:       tagMap,
 			IsPrimaryKey: isPrimaryKey,
+			ColName:      colName,
 		}
+
+		// store col to field name mapping
+		colToFieldNameMap[colName] = fieldName
+
 		if field.IsPrimaryKey {
 			primaryField = field
 		}
@@ -58,10 +71,11 @@ func GetModel(in interface{}) *Model {
 	checkError(err)
 
 	return &Model{
-		TableName:    name,
-		Fields:       fields,
-		Value:        reflect.ValueOf(in),
-		PrimaryField: primaryField,
+		TableName:         name,
+		Fields:            fields,
+		Value:             reflect.ValueOf(in),
+		PrimaryField:      primaryField,
+		ColToFieldNameMap: colToFieldNameMap,
 	}
 }
 
@@ -97,7 +111,7 @@ func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string,
 func (m *Model) Columns() []string {
 	var columns []string
 	for _, field := range m.Fields {
-		columns = append(columns, strings.ToLower(field.Name))
+		columns = append(columns, field.ColName)
 	}
 	return columns
 }

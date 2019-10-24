@@ -30,19 +30,4 @@ func AfterUpdateHandler(ctx context.Context, o *Orm) error {
 
 type UpdateCallbackProcessor struct {
 	CommonCallbackProcessor
-	// Handlers []CallbackHandler
 }
-
-// func (cp *UpdateCallbackProcessor) Register(handler CallbackHandler) {
-// 	cp.Handlers = append(cp.Handlers, handler)
-// }
-
-// func (cp *UpdateCallbackProcessor) Process(ctx context.Context, o *Orm) error {
-// 	for _, handler := range cp.Handlers {
-// 		err := handler(ctx, o)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }

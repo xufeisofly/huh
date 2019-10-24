@@ -75,7 +75,8 @@
 **** DONE create
 **** TODO create callback transaction
 **** DONE update updatewithwhere
-**** TODO get
+**** DONE get getby
+**** TODO get should match col name order, not select *
 **** TODO destroy
 **** DONE transaction
 **** TODO count

@@ -10,8 +10,8 @@ import (
 )
 
 type User struct {
-	ID    uint32 `huh:"pk"`
 	Email string
+	ID    uint32 `huh:"pk"`
 }
 
 func (u User) TableName() string {
@@ -63,7 +63,7 @@ func TestCreate(t *testing.T) {
 	// test create raw sql
 	c := o.Create().Of(ctx, &user)
 	sqlStr := c.String()
-	if sqlStr != "INSERT INTO users (id,email) VALUES ('1','test@huh.com')" {
+	if sqlStr != "INSERT INTO users (email,id) VALUES ('test@huh.com','1')" {
 		t.Errorf("sqlStr actual: %s", sqlStr)
 	}
 

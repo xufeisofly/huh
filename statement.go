@@ -80,10 +80,11 @@ func (us UpdateStatement) String() string {
 }
 
 type SelectStatement struct {
-	WS           WhereStatement
-	TableName    string
-	PrimaryKey   string
-	PrimaryValue interface{}
+	WS              WhereStatement
+	TableName       string
+	SelectedColumns []string
+	PrimaryKey      string
+	PrimaryValue    interface{}
 
 	// the input interface pointer need to be assigned by the query scan
 	Result interface{}
@@ -93,7 +94,8 @@ func (ss SelectStatement) String() string {
 	// SELECT * FROM `users` WHERE id = 1
 	// TODO * 这里需要改成指定顺序的 columns，防止 model 字段和数据库字段顺序不一致
 	return fmt.Sprintf(
-		"SELECT * FROM `%s` WHERE %s",
+		"SELECT %s FROM `%s` WHERE %s",
+		strings.Join(ss.SelectedColumns, ","),
 		ss.TableName,
 		ss.WS.String(),
 	)

@@ -292,11 +292,12 @@ func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
 		return SelectStatement{
-			WS:           ws,
-			TableName:    o.model.TableName,
-			PrimaryKey:   primaryKey,
-			PrimaryValue: o.model.PrimaryField.Value,
-			Result:       in,
+			WS:              ws,
+			TableName:       o.model.TableName,
+			SelectedColumns: o.model.Columns(),
+			PrimaryKey:      primaryKey,
+			PrimaryValue:    o.model.PrimaryField.Value,
+			Result:          in,
 		}, nil
 	default:
 		return nil, ErrInvalidOperator

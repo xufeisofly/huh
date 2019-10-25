@@ -13,6 +13,7 @@ type Model struct {
 	Value        reflect.Value
 	PrimaryField *Field
 
+	// store col name to struct field name mapping
 	ColToFieldNameMap map[string]string
 }
 

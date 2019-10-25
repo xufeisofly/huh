@@ -1,7 +1,5 @@
 package huh
 
-import "fmt"
-
 func checkError(err error) {
 	if err != nil {
 		panic(err)
@@ -22,11 +20,4 @@ func uint8ToString(bs []uint8) string {
 		b[i] = byte(v)
 	}
 	return string(b)
-}
-
-func mapToConditionStr(arg map[string]interface{}) string {
-	var ret []string
-	for k, v := range arg {
-		ret = append(ret, fmt.Sprintf("%s = ?"))
-	}
 }

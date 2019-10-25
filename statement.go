@@ -84,7 +84,9 @@ type SelectStatement struct {
 	TableName    string
 	PrimaryKey   string
 	PrimaryValue interface{}
-	Result       interface{}
+
+	// the input interface pointer need to be assigned by the query scan
+	Result interface{}
 }
 
 func (ss SelectStatement) String() string {

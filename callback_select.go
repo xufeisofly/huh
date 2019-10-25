@@ -2,7 +2,6 @@ package huh
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -49,6 +48,7 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 	return nil
 }
 
+// setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)
 func (o *Orm) setSelectResult(result map[string]string) error {
 	s := reflect.ValueOf(o.statement.(SelectStatement).Result).Elem()
 
@@ -59,16 +59,28 @@ func (o *Orm) setSelectResult(result map[string]string) error {
 
 			if f.IsValid() && f.CanSet() {
 				switch f.Kind() {
-				case reflect.Int:
-				case reflect.Uint:
-				case reflect.Uint32:
-					colUint64 := cast.ToUint64(col)
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					colInt64, err := cast.ToInt64E(col)
+					if err != nil {
+						return err
+					}
+					f.SetInt(colInt64)
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					colUint64, err := cast.ToUint64E(col)
+					if err != nil {
+						return err
+					}
 					f.SetUint(colUint64)
 				case reflect.String:
 					f.SetString(col)
 				case reflect.Bool:
+					colBool, err := cast.ToBoolE(col)
+					if err != nil {
+						return err
+					}
+					f.SetBool(colBool)
 				default:
-					return errors.New(fmt.Sprintf("unknow field type %v", f.Kind()))
+					return fmt.Errorf("unknow field type %v", f.Kind())
 				}
 			}
 		}

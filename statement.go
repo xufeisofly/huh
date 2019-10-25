@@ -33,7 +33,6 @@ type WhereStatement struct {
 	ByPK      bool
 	Condition string
 	Values    []interface{}
-	Limit     uint
 }
 
 func (ws WhereStatement) String() string {
@@ -85,6 +84,7 @@ type SelectStatement struct {
 	SelectedColumns []string
 	PrimaryKey      string
 	PrimaryValue    interface{}
+	Limit           uint
 
 	// the input interface pointer need to be assigned by the query scan
 	Result interface{}

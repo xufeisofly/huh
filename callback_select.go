@@ -19,7 +19,7 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 	statement := o.statement.(SelectStatement)
 	var results []map[string]string
 
-	if statement.WS.Limit == 1 {
+	if statement.Limit == 1 {
 		rows, _ := o.Query(o.String())
 		defer rows.Close()
 		colNames, _ := rows.Columns()

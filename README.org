@@ -41,7 +41,9 @@
    // Query
    o.Get(1).Do(ctx, &user)
    o.GetBy("Name", "Trump", "ID", 1).Do(ctx, &user)
-   o.Where("Name = ", "Trump").Do(ctx, []&user)
+
+   users := []&User{}
+   o.Where("Name = ", "Trump").Do(ctx, users)
 
    o.Select('name').Get(1).Do(ctx, &user)
 

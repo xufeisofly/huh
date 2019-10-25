@@ -22,6 +22,8 @@ type Orm struct {
 	must      bool
 	statement SQLStatement
 	newValues map[string]interface{}
+
+	scope Scope
 }
 
 // New initialize a Orm struct
@@ -73,7 +75,10 @@ func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
 
-	statement := WhereStatement{Values: []interface{}{pk}, ByPK: true, Limit: 1}
+	statement := SelectStatement{
+		WS:    WhereStatement{Values: []interface{}{pk}, ByPK: true},
+		Limit: 1,
+	}
 	c.statement = statement
 	return c
 }
@@ -99,11 +104,13 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 		values = append(values, v)
 	}
 
-	statement := WhereStatement{
-		Condition: strings.Join(conditionArr, " AND "),
-		Values:    values,
-		Limit:     1,
-		ByPK:      false,
+	statement := SelectStatement{
+		WS: WhereStatement{
+			Condition: strings.Join(conditionArr, " AND "),
+			Values:    values,
+			ByPK:      false,
+		},
+		Limit: 1,
 	}
 	c.statement = statement
 	return c
@@ -111,9 +118,11 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
+	// default OperatorSelect
+	c.operator = OperatorSelect
 
 	statement := WhereStatement{Condition: sqlStatement, Values: values}
-	c.statement = statement
+	c.scope.WS = statement
 	return c
 }
 
@@ -244,6 +253,7 @@ func (o *Orm) clone() *Orm {
 		must:      o.must,
 		statement: o.statement,
 		newValues: o.newValues,
+		scope:     o.scope,
 	}
 }
 
@@ -265,11 +275,11 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 }
 
 func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
-	var ws = WhereStatement{}
-	// 如果此时已经存在 statement，则肯定是 WhereStatement，比较 hack，需要优化
-	if o.statement != nil {
-		ws = o.statement.(WhereStatement)
-	}
+	// var ws = SelectStatement{}
+	// // 如果此时已经存在 statement，则肯定是 WhereStatement，比较 hack，需要优化
+	// if o.statement != nil {
+	// 	ws = o.statement.(SelectStatement)
+	// }
 
 	switch o.operator {
 	case OperatorCreate:
@@ -280,19 +290,22 @@ func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 		}, nil
 	case OperatorUpdate:
 		return UpdateStatement{
-			WS:           ws,
+			WS:           o.scope.WS,
 			TableName:    o.model.TableName,
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
 		}, nil
 	case OperatorSelect:
+		statement := o.statement.(SelectStatement)
 		primaryKey := o.model.PrimaryField.ColName
-		if ws.ByPK {
-			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
+
+		if statement.WS.ByPK {
+			statement.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
 		return SelectStatement{
-			WS:              ws,
+			WS:              statement.WS,
+			Limit:           statement.Limit,
 			TableName:       o.model.TableName,
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,

@@ -275,12 +275,6 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 }
 
 func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
-	// var ws = SelectStatement{}
-	// // 如果此时已经存在 statement，则肯定是 WhereStatement，比较 hack，需要优化
-	// if o.statement != nil {
-	// 	ws = o.statement.(SelectStatement)
-	// }
-
 	switch o.operator {
 	case OperatorCreate:
 		return InsertStatement{

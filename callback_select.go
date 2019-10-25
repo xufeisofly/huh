@@ -16,36 +16,32 @@ func init() {
 }
 
 func SelectHandler(ctx context.Context, o *Orm) error {
-	statement := o.statement.(SelectStatement)
 	var results []map[string]string
 
-	if statement.Limit == 1 {
-		rows, _ := o.Query(o.String())
-		defer rows.Close()
-		colNames, _ := rows.Columns()
+	rows, _ := o.Query(o.String())
+	defer rows.Close()
+	colNames, _ := rows.Columns()
 
-		cols := make([]interface{}, len(colNames))
-		colPtrs := make([]interface{}, len(colNames))
-		for i, _ := range cols {
-			colPtrs[i] = &cols[i]
-		}
-
-		for rows.Next() {
-			rows.Scan(colPtrs...)
-			ret := make(map[string]string)
-
-			for i, col := range cols {
-				colName := colNames[i]
-				colValueStr := string(col.([]uint8))
-				ret[colName] = colValueStr
-			}
-			results = append(results, ret)
-		}
-
-		err := o.setSelectResult(results[0])
-		return err
+	cols := make([]interface{}, len(colNames))
+	colPtrs := make([]interface{}, len(colNames))
+	for i, _ := range cols {
+		colPtrs[i] = &cols[i]
 	}
-	return nil
+
+	for rows.Next() {
+		rows.Scan(colPtrs...)
+		ret := make(map[string]string)
+
+		for i, col := range cols {
+			colName := colNames[i]
+			colValueStr := string(col.([]uint8))
+			ret[colName] = colValueStr
+		}
+		results = append(results, ret)
+	}
+
+	err := o.setSelectResult(results[0])
+	return err
 }
 
 // setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)

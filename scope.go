@@ -1,5 +1,6 @@
 package huh
 
 type Scope struct {
-	WS WhereStatement
+	WS    WhereStatement
+	Limit uint
 }

@@ -75,11 +75,12 @@ func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
 
-	statement := SelectStatement{
-		WS:    WhereStatement{Values: []interface{}{pk}, ByPK: true},
-		Limit: 1,
-	}
-	c.statement = statement
+	// statement := SelectStatement{
+	// 	WS:    WhereStatement{Values: []interface{}{pk}, ByPK: true},
+	// 	Limit: 1,
+	// }
+	c.scope.WS = WhereStatement{Values: []interface{}{pk}, ByPK: true}
+	c.scope.Limit = 1
 	return c
 }
 
@@ -104,15 +105,12 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 		values = append(values, v)
 	}
 
-	statement := SelectStatement{
-		WS: WhereStatement{
-			Condition: strings.Join(conditionArr, " AND "),
-			Values:    values,
-			ByPK:      false,
-		},
-		Limit: 1,
+	c.scope.WS = WhereStatement{
+		Condition: strings.Join(conditionArr, " AND "),
+		Values:    values,
+		ByPK:      false,
 	}
-	c.statement = statement
+	c.scope.Limit = 1
 	return c
 }
 
@@ -120,9 +118,7 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 	// default OperatorSelect
 	c.operator = OperatorSelect
-
-	statement := WhereStatement{Condition: sqlStatement, Values: values}
-	c.scope.WS = statement
+	c.scope.WS = WhereStatement{Condition: sqlStatement, Values: values}
 	return c
 }
 
@@ -291,15 +287,14 @@ func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 			Values:       o.newValues,
 		}, nil
 	case OperatorSelect:
-		statement := o.statement.(SelectStatement)
 		primaryKey := o.model.PrimaryField.ColName
 
-		if statement.WS.ByPK {
-			statement.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
+		if o.scope.WS.ByPK {
+			o.scope.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
 		return SelectStatement{
-			WS:              statement.WS,
-			Limit:           statement.Limit,
+			WS:              o.scope.WS,
+			Limit:           o.scope.Limit,
 			TableName:       o.model.TableName,
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,

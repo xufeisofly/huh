@@ -22,6 +22,8 @@ type Orm struct {
 	must      bool
 	statement SQLStatement
 	newValues map[string]interface{}
+
+	scope Scope
 }
 
 // New initialize a Orm struct
@@ -73,8 +75,12 @@ func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
 
-	statement := WhereStatement{Values: []interface{}{pk}, ByPK: true, Limit: 1}
-	c.statement = statement
+	// statement := SelectStatement{
+	// 	WS:    WhereStatement{Values: []interface{}{pk}, ByPK: true},
+	// 	Limit: 1,
+	// }
+	c.scope.WS = WhereStatement{Values: []interface{}{pk}, ByPK: true}
+	c.scope.Limit = 1
 	return c
 }
 
@@ -99,21 +105,20 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 		values = append(values, v)
 	}
 
-	statement := WhereStatement{
+	c.scope.WS = WhereStatement{
 		Condition: strings.Join(conditionArr, " AND "),
 		Values:    values,
-		Limit:     1,
 		ByPK:      false,
 	}
-	c.statement = statement
+	c.scope.Limit = 1
 	return c
 }
 
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
-
-	statement := WhereStatement{Condition: sqlStatement, Values: values}
-	c.statement = statement
+	// default OperatorSelect
+	c.operator = OperatorSelect
+	c.scope.WS = WhereStatement{Condition: sqlStatement, Values: values}
 	return c
 }
 
@@ -244,6 +249,7 @@ func (o *Orm) clone() *Orm {
 		must:      o.must,
 		statement: o.statement,
 		newValues: o.newValues,
+		scope:     o.scope,
 	}
 }
 
@@ -265,12 +271,6 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 }
 
 func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
-	var ws = WhereStatement{}
-	// 如果此时已经存在 statement，则肯定是 WhereStatement，比较 hack，需要优化
-	if o.statement != nil {
-		ws = o.statement.(WhereStatement)
-	}
-
 	switch o.operator {
 	case OperatorCreate:
 		return InsertStatement{
@@ -280,7 +280,7 @@ func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 		}, nil
 	case OperatorUpdate:
 		return UpdateStatement{
-			WS:           ws,
+			WS:           o.scope.WS,
 			TableName:    o.model.TableName,
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
@@ -288,11 +288,13 @@ func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
 		}, nil
 	case OperatorSelect:
 		primaryKey := o.model.PrimaryField.ColName
-		if ws.ByPK {
-			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
+
+		if o.scope.WS.ByPK {
+			o.scope.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
 		return SelectStatement{
-			WS:              ws,
+			WS:              o.scope.WS,
+			Limit:           o.scope.Limit,
 			TableName:       o.model.TableName,
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,

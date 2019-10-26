@@ -33,7 +33,6 @@ type WhereStatement struct {
 	ByPK      bool
 	Condition string
 	Values    []interface{}
-	Limit     uint
 }
 
 func (ws WhereStatement) String() string {
@@ -85,6 +84,7 @@ type SelectStatement struct {
 	SelectedColumns []string
 	PrimaryKey      string
 	PrimaryValue    interface{}
+	Limit           uint
 
 	// the input interface pointer need to be assigned by the query scan
 	Result interface{}
@@ -93,11 +93,14 @@ type SelectStatement struct {
 func (ss SelectStatement) String() string {
 	// SELECT * FROM `users` WHERE id = 1
 	// TODO * 这里需要改成指定顺序的 columns，防止 model 字段和数据库字段顺序不一致
-	return fmt.Sprintf(
+	rawSQL := fmt.Sprintf(
 		"SELECT %s FROM `%s` WHERE %s",
 		strings.Join(ss.SelectedColumns, ","),
 		ss.TableName,
 		ss.WS.String(),
 	)
-
+	if ss.Limit == 1 {
+		rawSQL += " LIMIT 1"
+	}
+	return rawSQL
 }

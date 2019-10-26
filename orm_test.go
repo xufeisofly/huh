@@ -125,6 +125,20 @@ func TestCreate(t *testing.T) {
 	if user7 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user7)
 	}
+
+	// test where
+	var users = []User{}
+	o.Where("email = ?", "update2@huh.com").Do(ctx, &users)
+	expects := []User{
+		{Email: "update2@huh.com", ID: 1},
+		{Email: "update2@huh.com", ID: 4},
+	}
+	for i, expected := range expects {
+		if users[i] != expected {
+			t.Errorf("where error, expected: %v, actual: %v", expected, users)
+		}
+	}
+
 }
 
 func TestMain(m *testing.M) {

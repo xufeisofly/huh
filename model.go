@@ -34,6 +34,21 @@ func GetModel(in interface{}) *Model {
 		reflectValue = reflect.ValueOf(in)
 	}
 
+	// deal with slice, etc. o.Where(...).Do(ctx, &users)
+	if reflectValue.Kind() == reflect.Slice {
+		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 1, 1))
+		for i := 0; i < reflectValue.Len(); i++ {
+			itemValue := reflectValue.Index(i)
+			if itemValue.Kind() == reflect.Struct {
+				itemIndirectValue := reflect.Indirect(itemValue)
+
+				reflectValue = itemIndirectValue
+				reflectType = reflectType.Elem()
+				break
+			}
+		}
+	}
+
 	name, err := getTableName(reflectValue, reflectType)
 	checkError(err)
 	// get fields
@@ -88,6 +103,7 @@ func getPrimaryKey(in interface{}) (string, error) {
 func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string, error) {
 	var tableName string
 
+	// TODO 目前还不支持 *User 下面定义 TableName
 	if methodValue := reflectValue.MethodByName("TableName"); methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func() string:

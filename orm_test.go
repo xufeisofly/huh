@@ -101,8 +101,6 @@ func TestCreate(t *testing.T) {
 	})
 
 	// test get by pk
-	user5 := User{}
-	expected := User{ID: uint32(1), Email: "update2@huh.com"}
 	o.Get(1).Do(ctx, &user5)
 	if user5 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user5)

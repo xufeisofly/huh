@@ -37,11 +37,11 @@ func GetModel(in interface{}) *Model {
 
 	// deal with slice, etc. o.Where(...).Do(ctx, &users)
 	if reflectValue.Kind() == reflect.Slice {
-		// Set Slice to in to get item reflection info
+		// Set Slice to in to get item reflection info, but this will change `in` temperarily
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 1, 1))
 		// get itemValue of slice reflection value
 		itemValue := reflectValue.Index(0)
-		// Clear reflect value
+		// Clear reflect value in order not to change `in`
 		// TODO 用 in 的 copy 就行了
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, 0))
 		if itemValue.Kind() == reflect.Struct {

@@ -42,8 +42,8 @@
    o.Get(1).Do(ctx, &user)
    o.GetBy("Name", "Trump", "ID", 1).Do(ctx, &user)
 
-   users := []&User{}
-   o.Where("Name = ", "Trump").Do(ctx, users)
+   users := []User{}
+   o.Where("Name = ", "Trump").Do(ctx, &users)
 
    o.Select('name').Get(1).Do(ctx, &user)
 
@@ -59,7 +59,7 @@
    // transaction
    o.Transaction(ctx, func(o *huh.Orm){
        o.MustCreate().Do(ctx, &user2)
-	   o.MustCreate().Do(ctx, &user)
+       o.MustCreate().Do(ctx, &user)
    })
 
    o.Transaction(ctx, func(o2 *huh.Orm){
@@ -78,7 +78,7 @@
 **** TODO create callback transaction
 **** DONE update updatewithwhere
 **** DONE get getby
-**** TODO get should match col name order, not select *
+**** DONE get should match col name order, not select *
 **** TODO destroy
 **** DONE transaction
 **** TODO count
@@ -89,4 +89,3 @@
 **** TODO annotation
 **** TODO syncMutex
 **** TODO errors standard
-

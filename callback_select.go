@@ -20,6 +20,7 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 
 	rows, _ := o.Query(o.String())
 	defer rows.Close()
+
 	colNames, _ := rows.Columns()
 
 	cols := make([]interface{}, len(colNames))
@@ -46,6 +47,11 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 
 // setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)
 func (o *Orm) setSelectResult(results []map[string]string) error {
+	// no results, return directly
+	if len(results) == 0 {
+		return nil
+	}
+
 	v := reflect.ValueOf(o.statement.(SelectStatement).Result)
 
 	if v.Kind() != reflect.Ptr {

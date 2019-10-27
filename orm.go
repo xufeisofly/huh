@@ -40,12 +40,14 @@ func (o *Orm) Close() error {
 	return o.masterDB.Close()
 }
 
+// Create for a model instance creation
 func (o *Orm) Create() *Orm {
 	c := o.clone()
 	c.operator = OperatorCreate
 	return c
 }
 
+// MustCreate Create with error panic
 func (o *Orm) MustCreate() *Orm {
 	c := o.clone()
 	c.operator = OperatorCreate
@@ -53,6 +55,7 @@ func (o *Orm) MustCreate() *Orm {
 	return c
 }
 
+// Update for a model instance update
 func (o *Orm) Update(args ...interface{}) *Orm {
 	mapArg := make(map[string]interface{})
 	if len(args) != 1 {
@@ -71,19 +74,18 @@ func (o *Orm) update(arg map[string]interface{}) *Orm {
 	return c
 }
 
+// Get by pk, will panic if result if none
 func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
 
-	// statement := SelectStatement{
-	// 	WS:    WhereStatement{Values: []interface{}{pk}, ByPK: true},
-	// 	Limit: 1,
-	// }
 	c.scope.WS = WhereStatement{Values: []interface{}{pk}, ByPK: true}
 	c.scope.Limit = 1
+	c.must = true
 	return c
 }
 
+// GetBy column value limit 1
 func (o *Orm) GetBy(args ...interface{}) *Orm {
 	mapArg := make(map[string]interface{})
 	if len(args) != 1 {
@@ -114,6 +116,7 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 	return c
 }
 
+// Where get multiple instances by raw sql
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 	// default OperatorSelect
@@ -122,6 +125,7 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	return c
 }
 
+// Do is usually the end of the orm schedule, assign result to in or get data from in
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)
 	err := c.callCallbacks(ctx)
@@ -132,17 +136,19 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	return err
 }
 
+// Of parse the sql statement without calling the it
 func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 	c := o.clone()
 	c.model = GetModel(in)
 
-	statement, err := c.parseSQLStatement(in)
+	statement, err := c.parseStatement(in)
 	checkError(err)
 	c.statement = statement
 
 	return c
 }
 
+// Begin is the begin of transaction
 func (o *Orm) Begin() *Orm {
 	c := o.clone()
 
@@ -166,6 +172,7 @@ func (o *Orm) inTransaction() bool {
 	return o.txCount > 0
 }
 
+// Commit the transaction
 func (o *Orm) Commit() error {
 	if o.inTransaction() {
 		o.txCount--
@@ -173,6 +180,7 @@ func (o *Orm) Commit() error {
 	return o.tx.tx.Commit()
 }
 
+// Rollback the transaction
 func (o *Orm) Rollback() error {
 	if o.inTransaction() {
 		o.txCount--
@@ -180,6 +188,7 @@ func (o *Orm) Rollback() error {
 	return o.tx.tx.Rollback()
 }
 
+// Transaction call the transaction with a callback function
 func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 	c := o.Begin()
 	defer func() {
@@ -193,6 +202,7 @@ func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 	return
 }
 
+// Exec the raw SQL
 func (o *Orm) Exec(rawSQL string) error {
 	var err error
 	if o.tx.tx != nil {
@@ -203,10 +213,12 @@ func (o *Orm) Exec(rawSQL string) error {
 	return err
 }
 
+// QueryRow wrap of the db QueryRow
 func (o *Orm) QueryRow(rawSQL string) *sql.Row {
 	return o.masterDB.QueryRow(rawSQL)
 }
 
+// Query wrap of the db Query
 func (o *Orm) Query(rawSQL string) (*sql.Rows, error) {
 	return o.masterDB.Query(rawSQL)
 }
@@ -215,6 +227,7 @@ func (o *Orm) String() string {
 	return o.statement.String()
 }
 
+// CallMethod call a model method by methodName
 func (o *Orm) CallMethod(methodName string) error {
 	ctx := context.Background()
 	var argsValue []reflect.Value
@@ -270,7 +283,7 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 	return err
 }
 
-func (o *Orm) parseSQLStatement(in interface{}) (SQLStatement, error) {
+func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
 	switch o.operator {
 	case OperatorCreate:
 		return InsertStatement{

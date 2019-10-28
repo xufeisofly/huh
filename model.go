@@ -17,6 +17,7 @@ type Model struct {
 	ColToFieldNameMap map[string]string
 }
 
+// GetModel get model info from `in`
 func GetModel(in interface{}) *Model {
 	var name string
 	var fields []*Field
@@ -24,6 +25,10 @@ func GetModel(in interface{}) *Model {
 	var tagMap map[string]string
 	var primaryField *Field
 	var isPrimaryKey bool
+
+	// clone an `in`
+	in = cloneInterface(in)
+
 	colToFieldNameMap := make(map[string]string)
 
 	reflectType := reflect.TypeOf(in)
@@ -37,15 +42,13 @@ func GetModel(in interface{}) *Model {
 	// deal with slice, etc. o.Where(...).Do(ctx, &users)
 	if reflectValue.Kind() == reflect.Slice {
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 1, 1))
-		for i := 0; i < reflectValue.Len(); i++ {
-			itemValue := reflectValue.Index(i)
-			if itemValue.Kind() == reflect.Struct {
-				itemIndirectValue := reflect.Indirect(itemValue)
+		itemValue := reflectValue.Index(0)
 
-				reflectValue = itemIndirectValue
-				reflectType = reflectType.Elem()
-				break
-			}
+		if itemValue.Kind() == reflect.Struct {
+			itemIndirectValue := reflect.Indirect(itemValue)
+
+			reflectValue = itemIndirectValue
+			reflectType = reflectType.Elem()
 		}
 	}
 
@@ -96,7 +99,6 @@ func GetModel(in interface{}) *Model {
 }
 
 func getPrimaryKey(in interface{}) (string, error) {
-
 	return defaultPrimaryKey, nil
 }
 

@@ -60,6 +60,9 @@ func TestCreate(t *testing.T) {
 	ctx := huh.Context()
 	user := User{Email: "test@huh.com", ID: 1}
 
+	var receiver User
+	var receivers []User
+
 	// test create raw sql
 	c := o.Create().Of(ctx, &user)
 	sqlStr := c.String()
@@ -68,9 +71,12 @@ func TestCreate(t *testing.T) {
 	}
 
 	// test normal create
-	err := o.Create().Do(ctx, &user)
-	if err != nil {
-		t.Errorf("create error: %s", err)
+	o.Create().Do(ctx, &user)
+
+	receiver = User{}
+	o.Get(1).Do(ctx, &receiver)
+	if receiver != user {
+		t.Errorf("[create error] expect: %v, actual: %v", user, receiver)
 	}
 
 	// test create with hooks
@@ -79,18 +85,43 @@ func TestCreate(t *testing.T) {
 		t.Errorf("CreateBefore hook should have error")
 	}
 
+	receiver = User{}
+	o.Get(2).Do(ctx, &receiver)
+	if (User{}) != receiver {
+		t.Errorf("[get error] should get nil, actual: %v", receiver)
+	}
+
 	// test update
-	err = o.Update("email", "update@huh.com").Do(ctx, &user)
-	if err != nil {
-		t.Errorf("update error: %s", err)
+	o.Update("email", "update@huh.com").Do(ctx, &user)
+
+	receiver = User{}
+	o.Get(user.ID).Do(ctx, &receiver)
+	if receiver.Email != "update@huh.com" {
+		t.Errorf("[update error] expected: %s, actual: %s", "update@huh.com", receiver.Email)
 	}
 
 	// test update_all with where
 	user4 := User{ID: 4, Email: "update@huh.com"}
 	o.Create().Do(ctx, &user4)
-	err = o.Where("email = ?", "update@huh.com").Update("email", "update2@huh.com").Do(ctx, User{})
-	if err != nil {
-		t.Errorf("update error: %s", err)
+
+	receivers = []User{}
+	o.Where("email = ?", "update@huh.com").Do(ctx, &receivers)
+	if len(receivers) != 2 {
+		t.Errorf("[where error] result count should be 2")
+	}
+
+	receivers = []User{}
+	o.Where("email = ?", "update@huh.com").Update("email", "update2@huh.com").Do(ctx, User{})
+	o.Where("email = ?", "update@huh.com").Do(ctx, &receivers)
+
+	if len(receivers) != 0 {
+		t.Errorf("[where error] result count should be 0")
+	}
+
+	o.Where("email = ?", "update2@huh.com").Do(ctx, &receivers)
+
+	if len(receivers) != 2 {
+		t.Errorf("[where error] result count should be 2")
 	}
 
 	// test transaction
@@ -135,10 +166,28 @@ func TestCreate(t *testing.T) {
 	}
 	for i, expected := range expects {
 		if users[i] != expected {
-			t.Errorf("where error, expected: %v, actual: %v", expected, users)
+			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
 		}
 	}
 
+	users = []User{}
+	o.Where("email = ?", "update2@huh.com").Limit(1).Offset(1).Do(ctx, &users)
+	expected = User{Email: "update2@huh.com", ID: 4}
+	if expected != users[0] {
+		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
+	}
+
+	users = []User{}
+	o.Where("email = ?", "update2@huh.com").Order("id desc").Do(ctx, &users)
+	expects = []User{
+		{Email: "update2@huh.com", ID: 4},
+		{Email: "update2@huh.com", ID: 1},
+	}
+	for i, expected := range expects {
+		if users[i] != expected {
+			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
+		}
+	}
 }
 
 func TestMain(m *testing.M) {

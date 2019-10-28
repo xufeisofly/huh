@@ -166,7 +166,7 @@ func TestCreate(t *testing.T) {
 	}
 	for i, expected := range expects {
 		if users[i] != expected {
-			t.Errorf("where error, expected: %v, actual: %v", expected, users)
+			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
 		}
 	}
 
@@ -175,6 +175,18 @@ func TestCreate(t *testing.T) {
 	expected = User{Email: "update2@huh.com", ID: 4}
 	if expected != users[0] {
 		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
+	}
+
+	users = []User{}
+	o.Where("email = ?", "update2@huh.com").Order("id desc").Do(ctx, &users)
+	expects = []User{
+		{Email: "update2@huh.com", ID: 4},
+		{Email: "update2@huh.com", ID: 1},
+	}
+	for i, expected := range expects {
+		if users[i] != expected {
+			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
+		}
 	}
 }
 

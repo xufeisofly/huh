@@ -87,6 +87,7 @@ type SelectStatement struct {
 
 	Limit  uint
 	Offset uint
+	Order  string
 
 	// the input interface pointer need to be assigned by the query scan
 	Result interface{}
@@ -100,6 +101,9 @@ func (ss SelectStatement) String() string {
 		ss.TableName,
 		ss.WS.String(),
 	)
+	if ss.Order != "" {
+		rawSQL += fmt.Sprintf(" ORDER BY %s", ss.Order)
+	}
 	if ss.Limit != 0 {
 		rawSQL += fmt.Sprintf(" LIMIT %d", ss.Limit)
 	}

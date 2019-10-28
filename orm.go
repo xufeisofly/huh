@@ -139,6 +139,12 @@ func (o *Orm) Limit(i uint) *Orm {
 	return c
 }
 
+func (o *Orm) Order(str string) *Orm {
+	c := o.clone()
+	c.scope.Order = str
+	return c
+}
+
 // Do is usually the end of the orm schedule, assign result to in or get data from in
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)
@@ -323,6 +329,7 @@ func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
 			WS:              o.scope.WS,
 			Limit:           o.scope.Limit,
 			Offset:          o.scope.Offset,
+			Order:           o.scope.Order,
 			TableName:       o.model.TableName,
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,

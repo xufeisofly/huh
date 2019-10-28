@@ -125,6 +125,18 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	return c
 }
 
+// Offset pagination offset
+func (o *Orm) Offset(i uint) *Orm {
+	c := o.clone()
+	return c
+}
+
+// Limit pagination limit
+func (o *Orm) Limit(i uint) *Orm {
+	c := o.clone()
+	return c
+}
+
 // Do is usually the end of the orm schedule, assign result to in or get data from in
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.Of(ctx, in)

@@ -43,7 +43,8 @@
    o.GetBy("Name", "Trump", "ID", 1).Do(ctx, &user)
 
    users := []User{}
-   o.Where("Name = ", "Trump").Do(ctx, &users)
+   o.Where("Name = ?", "Trump").Do(ctx, &users)
+   o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
 
    o.Select('name').Get(1).Do(ctx, &user)
 
@@ -79,6 +80,7 @@
 **** DONE update updatewithwhere
 **** DONE get getby
 **** DONE get should match col name order, not select *
+**** TODO offset limit
 **** TODO destroy
 **** DONE transaction
 **** TODO count

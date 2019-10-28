@@ -17,6 +17,7 @@ type Model struct {
 	ColToFieldNameMap map[string]string
 }
 
+// GetModel get model info from `in`
 func GetModel(in interface{}) *Model {
 	var name string
 	var fields []*Field

@@ -22,20 +22,12 @@ func (o *Orm) setSelectResult(results []map[string]string) error {
 
 	v = v.Elem()
 
-	// query with limit 1
-	if o.statement.(SelectStatement).Limit == 1 {
-		if !canAssign(v) {
-			return fmt.Errorf("can't assign non-struct value")
-		}
+	if v.Kind() == reflect.Struct {
 		err := o.setOutputResult(v, results[0])
 		if err != nil {
 			return err
 		}
-	} else {
-		if v.Kind() != reflect.Slice {
-			return fmt.Errorf("can't assign non-slice value")
-		}
-
+	} else if v.Kind() == reflect.Slice {
 		v.Set(reflect.MakeSlice(v.Type(), len(results), len(results)))
 		if !canAssign(v.Index(0)) {
 			return fmt.Errorf("can't assign non-struct to slice")

@@ -170,6 +170,12 @@ func TestCreate(t *testing.T) {
 		}
 	}
 
+	users = []User{}
+	o.Where("email = ?", "update2@huh.com").Limit(1).Offset(1).Do(ctx, &users)
+	expected = User{Email: "update2@huh.com", ID: 4}
+	if expected != users[0] {
+		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
+	}
 }
 
 func TestMain(m *testing.M) {

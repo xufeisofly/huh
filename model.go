@@ -99,7 +99,6 @@ func GetModel(in interface{}) *Model {
 }
 
 func getPrimaryKey(in interface{}) (string, error) {
-
 	return defaultPrimaryKey, nil
 }
 

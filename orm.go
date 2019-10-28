@@ -128,12 +128,14 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 // Offset pagination offset
 func (o *Orm) Offset(i uint) *Orm {
 	c := o.clone()
+	c.scope.Offset = i
 	return c
 }
 
 // Limit pagination limit
 func (o *Orm) Limit(i uint) *Orm {
 	c := o.clone()
+	c.scope.Limit = i
 	return c
 }
 
@@ -320,6 +322,7 @@ func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
 		return SelectStatement{
 			WS:              o.scope.WS,
 			Limit:           o.scope.Limit,
+			Offset:          o.scope.Offset,
 			TableName:       o.model.TableName,
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,

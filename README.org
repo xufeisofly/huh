@@ -81,11 +81,11 @@
 **** DONE update updatewithwhere
 **** DONE get getby
 **** DONE get should match col name order, not select *
-**** TODO offset limit
+**** DONE offset limit order
 **** TODO destroy
 **** DONE transaction
 **** TODO count
-**** TODO order by and group by
+**** TODO group by
 **** TODO master and slave DB
 **** TODO stability in various conditions
 **** TODO code enhancement

@@ -153,7 +153,6 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.clone()
 	c.do = true
 	c, err := c.Of(ctx, in)
-	// err := c.callCallbacks(ctx)
 
 	if c.must {
 		checkError(err)
@@ -168,9 +167,6 @@ func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 
 	c, err := c.callCallbacks(ctx)
 	return c, err
-
-	// c.model = GetModel(in)
-	// c.parseStatement()
 }
 
 // Begin is the begin of transaction

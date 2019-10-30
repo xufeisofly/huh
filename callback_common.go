@@ -32,13 +32,13 @@ func (cp *CommonCallbackProcessor) Register(handler CallbackHandler) {
 	cp.Handlers = append(cp.Handlers, handler)
 }
 
-func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) error {
+func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) (*Orm, error) {
 	for _, handler := range cp.Handlers {
 		c, err := handler(ctx, o)
 		o = c
 		if err != nil {
-			return err
+			return o, err
 		}
 	}
-	return nil
+	return o, nil
 }

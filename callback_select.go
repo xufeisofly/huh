@@ -15,6 +15,13 @@ func init() {
 func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 	var results []map[string]string
 
+	o.model = GetModel(o.result)
+	o.parseStatement()
+
+	if !o.do {
+		return o, nil
+	}
+
 	rows, _ := o.Query(o.String())
 	defer rows.Close()
 

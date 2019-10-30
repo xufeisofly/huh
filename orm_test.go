@@ -69,9 +69,9 @@ func TestEverything(t *testing.T) {
 	var receivers []User
 
 	// test create raw sql
-	c := o.Create().Of(ctx, &user)
+	c, _ := o.Create().Of(ctx, &user)
 	sqlStr := c.String()
-	if sqlStr != "INSERT INTO users (email,id) VALUES ('test@huh.com','1')" {
+	if sqlStr != "INSERT INTO users (email,id) VALUES ('update3@huh.com','1')" {
 		t.Errorf("sqlStr actual: %s", sqlStr)
 	}
 
@@ -112,9 +112,9 @@ func TestEverything(t *testing.T) {
 	o.Create().Do(ctx, &user4)
 
 	receivers = []User{}
-	o.Where("email = ?", "update@huh.com").Do(ctx, &receivers)
-	if len(receivers) != 2 {
-		t.Errorf("[where error] result count should be 2")
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
+	if len(receivers) != 1 {
+		t.Errorf("[where error] result count should be 1")
 	}
 
 	receivers = []User{}
@@ -125,18 +125,18 @@ func TestEverything(t *testing.T) {
 		t.Errorf("[where error] result count should be 0")
 	}
 
-	o.Where("email = ?", "update2@huh.com").Do(ctx, &receivers)
+	// test transaction
+	user3 := User{ID: 3, Email: "test3@huh.com"}
+	o.Transaction(ctx, func(h *huh.Orm) {
+		h.Create().Do(ctx, &user3)
+		h.MustCreate().Do(ctx, &user)
+	})
+
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
 
 	if len(receivers) != 2 {
 		t.Errorf("[where error] result count should be 2")
 	}
-
-	// test transaction
-	// user3 := User{ID: 3, Email: "test3@huh.com"}
-	// o.Transaction(ctx, func(h *huh.Orm) {
-	// 	h.Create().Do(ctx, &user3)
-	// 	h.MustCreate().Do(ctx, &user)
-	// })
 
 	// test get by pk
 	user5 := User{}
@@ -148,8 +148,8 @@ func TestEverything(t *testing.T) {
 
 	// test get by condition
 	user6 := User{}
-	expected = User{ID: uint32(4), Email: "update2@huh.com"}
-	o.GetBy("email", "update2@huh.com", "id", 4).Do(ctx, &user6)
+	expected = User{ID: uint32(4), Email: "update3@huh.com"}
+	o.GetBy("email", "update3@huh.com", "id", 4).Do(ctx, &user6)
 	if user6 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user6)
 	}
@@ -166,10 +166,10 @@ func TestEverything(t *testing.T) {
 
 	// test where
 	var users = []User{}
-	o.Where("email = ?", "update2@huh.com").Do(ctx, &users)
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
 	expects := []User{
-		{Email: "update2@huh.com", ID: 1},
-		{Email: "update2@huh.com", ID: 4},
+		{Email: "update3@huh.com", ID: 3},
+		{Email: "update3@huh.com", ID: 4},
 	}
 	for i, expected := range expects {
 		if users[i] != expected {
@@ -178,17 +178,17 @@ func TestEverything(t *testing.T) {
 	}
 
 	users = []User{}
-	o.Where("email = ?", "update2@huh.com").Limit(1).Offset(1).Do(ctx, &users)
-	expected = User{Email: "update2@huh.com", ID: 4}
+	o.Where("email = ?", "update3@huh.com").Limit(1).Offset(1).Do(ctx, &users)
+	expected = User{Email: "update3@huh.com", ID: 4}
 	if expected != users[0] {
 		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
 	}
 
 	users = []User{}
-	o.Where("email = ?", "update2@huh.com").Order("id desc").Do(ctx, &users)
+	o.Where("email = ?", "update3@huh.com").Order("id desc").Do(ctx, &users)
 	expects = []User{
-		{Email: "update2@huh.com", ID: 4},
-		{Email: "update2@huh.com", ID: 1},
+		{Email: "update3@huh.com", ID: 4},
+		{Email: "update3@huh.com", ID: 3},
 	}
 	for i, expected := range expects {
 		if users[i] != expected {

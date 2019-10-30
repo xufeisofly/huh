@@ -21,6 +21,13 @@ func BeforeUpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {
 }
 
 func UpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	o.model = GetModel(o.result)
+	o.parseStatement()
+
+	if !o.do {
+		return o, nil
+	}
+
 	err := o.Exec(o.String())
 	return o, err
 }

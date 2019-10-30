@@ -88,9 +88,6 @@ type SelectStatement struct {
 	Limit  uint
 	Offset uint
 	Order  string
-
-	// the input interface pointer need to be assigned by the query scan
-	Result interface{}
 }
 
 func (ss SelectStatement) String() string {

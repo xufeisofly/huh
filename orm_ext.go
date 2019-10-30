@@ -14,7 +14,7 @@ func (o *Orm) setSelectResult(results []map[string]string) error {
 		return nil
 	}
 
-	v := reflect.ValueOf(o.statement.(SelectStatement).Result)
+	v := reflect.ValueOf(o.result)
 
 	if v.Kind() != reflect.Ptr {
 		return fmt.Errorf("non-pointer type %v", v.Type())

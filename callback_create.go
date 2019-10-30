@@ -15,17 +15,19 @@ func init() {
 	createCallback.processor.Register(CommitOrRollbackTransactionHandler)
 }
 
-func BeforeCreateHandler(ctx context.Context, o *Orm) error {
-	return o.CallMethod("BeforeCreate")
+func BeforeCreateHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	err := o.CallMethod("BeforeCreate")
+	return o, err
 }
 
-func CreateHandler(ctx context.Context, o *Orm) error {
+func CreateHandler(ctx context.Context, o *Orm) (*Orm, error) {
 	err := o.Exec(o.String())
-	return err
+	return o, err
 }
 
-func AfterCreateHandler(ctx context.Context, o *Orm) error {
-	return o.CallMethod("AfterCreate")
+func AfterCreateHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	err := o.CallMethod("AfterCreate")
+	return o, err
 }
 
 type CreateCallbackProcessor struct {

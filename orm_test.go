@@ -25,6 +25,11 @@ func (u *User) BeforeCreate(ctx context.Context) error {
 	return nil
 }
 
+func (u *User) BeforeSave(ctx context.Context) error {
+	u.Email = "update3@huh.com"
+	return nil
+}
+
 func setup() {
 	huh.Config("mysql", huh.DBConfig{
 		Master: "norris@(127.0.0.1:3306)/mysite?charset=utf8",
@@ -51,7 +56,7 @@ func dropTable() {
 	o.Exec(rawSQL)
 }
 
-func TestCreate(t *testing.T) {
+func TestEverything(t *testing.T) {
 	dropTable()
 	createTable()
 	// defer dropTable()
@@ -70,13 +75,15 @@ func TestCreate(t *testing.T) {
 		t.Errorf("sqlStr actual: %s", sqlStr)
 	}
 
+	user = User{Email: "test@huh.com", ID: 1}
 	// test normal create
 	o.Create().Do(ctx, &user)
 
 	receiver = User{}
 	o.Get(1).Do(ctx, &receiver)
-	if receiver != user {
-		t.Errorf("[create error] expect: %v, actual: %v", user, receiver)
+	expected := User{Email: "update3@huh.com", ID: 1}
+	if receiver != expected {
+		t.Errorf("[create error] expect: %v, actual: %v", expected, receiver)
 	}
 
 	// test create with hooks
@@ -125,15 +132,15 @@ func TestCreate(t *testing.T) {
 	}
 
 	// test transaction
-	user3 := User{ID: 3, Email: "test3@huh.com"}
-	o.Transaction(ctx, func(h *huh.Orm) {
-		h.Create().Do(ctx, &user3)
-		h.MustCreate().Do(ctx, &user)
-	})
+	// user3 := User{ID: 3, Email: "test3@huh.com"}
+	// o.Transaction(ctx, func(h *huh.Orm) {
+	// 	h.Create().Do(ctx, &user3)
+	// 	h.MustCreate().Do(ctx, &user)
+	// })
 
 	// test get by pk
 	user5 := User{}
-	expected := User{ID: uint32(1), Email: "update2@huh.com"}
+	expected = User{ID: uint32(1), Email: "update2@huh.com"}
 	o.Get(1).Do(ctx, &user5)
 	if user5 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user5)

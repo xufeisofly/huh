@@ -12,7 +12,7 @@ func init() {
 	selectCallback.processor.Register(SelectHandler)
 }
 
-func SelectHandler(ctx context.Context, o *Orm) error {
+func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 	var results []map[string]string
 
 	rows, _ := o.Query(o.String())
@@ -39,7 +39,7 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 	}
 
 	err := o.setSelectResult(results)
-	return err
+	return o, err
 }
 
 func canAssign(v reflect.Value) bool {

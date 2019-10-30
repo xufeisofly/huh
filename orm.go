@@ -24,6 +24,8 @@ type Orm struct {
 	newValues map[string]interface{}
 
 	scope Scope
+
+	result interface{}
 }
 
 // New initialize a Orm struct
@@ -160,8 +162,9 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
 	c := o.clone()
 	c.model = GetModel(in)
+	c.result = in
 
-	statement, err := c.parseStatement(in)
+	statement, err := c.parseStatement()
 	checkError(err)
 	c.statement = statement
 
@@ -283,6 +286,7 @@ func (o *Orm) clone() *Orm {
 		statement: o.statement,
 		newValues: o.newValues,
 		scope:     o.scope,
+		result:    o.result,
 	}
 }
 
@@ -303,7 +307,7 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 	return err
 }
 
-func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
+func (o *Orm) parseStatement() (SQLStatement, error) {
 	switch o.operator {
 	case OperatorCreate:
 		return InsertStatement{
@@ -334,7 +338,6 @@ func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,
 			PrimaryValue:    o.model.PrimaryField.Value,
-			Result:          in,
 		}, nil
 	default:
 		return nil, ErrInvalidOperator

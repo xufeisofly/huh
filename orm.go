@@ -315,8 +315,8 @@ func (o *Orm) parseStatement() {
 	case OperatorCreate:
 		s = InsertStatement{
 			TableName: o.model.TableName,
-			Columns:   o.model.Columns(),
-			Values:    o.model.Values(),
+			Columns:   o.model.WritableColumns(),
+			Values:    o.model.WritableValues(),
 		}
 	case OperatorUpdate:
 		s = UpdateStatement{

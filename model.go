@@ -23,7 +23,7 @@ func GetModel(in interface{}) *Model {
 	var reflectValue reflect.Value
 	var tagMap map[string]string
 	var primaryField *Field
-	var isPrimaryKey bool
+	var isPrimaryKey, isReadOnly bool
 
 	// clone an `in`
 	inC := cloneInterface(in)
@@ -67,6 +67,9 @@ func GetModel(in interface{}) *Model {
 			if k == "COL" {
 				colName = v
 			}
+			if k == "READONLY" {
+				isReadOnly = true
+			}
 		}
 
 		field := &Field{
@@ -75,6 +78,7 @@ func GetModel(in interface{}) *Model {
 			TagMap:       tagMap,
 			IsPrimaryKey: isPrimaryKey,
 			ColName:      colName,
+			IsReadOnly:   isReadOnly,
 		}
 
 		// store col to field name mapping
@@ -134,9 +138,31 @@ func (m *Model) Columns() []string {
 	return columns
 }
 
+func (m *Model) WritableColumns() []string {
+	var columns []string
+	for _, field := range m.Fields {
+		if field.IsReadOnly {
+			continue
+		}
+		columns = append(columns, field.ColName)
+	}
+	return columns
+}
+
 func (m *Model) Values() []interface{} {
 	var values []interface{}
 	for _, value := range m.Fields {
+		values = append(values, value.Value)
+	}
+	return values
+}
+
+func (m *Model) WritableValues() []interface{} {
+	var values []interface{}
+	for _, value := range m.Fields {
+		if value.IsReadOnly {
+			continue
+		}
 		values = append(values, value.Value)
 	}
 	return values

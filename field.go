@@ -12,6 +12,8 @@ type Field struct {
 	TagMap       map[string]string
 	IsPrimaryKey bool
 	ColName      string
+	// if field is read only, etc. created_at updated_at
+	IsReadOnly bool
 }
 
 func parseTagMap(tags reflect.StructTag) map[string]string {

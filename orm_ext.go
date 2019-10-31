@@ -3,6 +3,7 @@ package huh
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/spf13/cast"
 )
@@ -80,6 +81,13 @@ func (o *Orm) setOutputResult(output reflect.Value, data map[string]string) erro
 				return err
 			}
 			f.SetFloat(colFloat)
+		case reflect.Struct: // time.Time
+			layout := "2006-01-02 15:04:05"
+			colTime, err := time.Parse(layout, col)
+			if err != nil {
+				return err
+			}
+			f.Set(reflect.ValueOf(colTime))
 		default:
 			return fmt.Errorf("unknow field type %v", f.Kind())
 		}

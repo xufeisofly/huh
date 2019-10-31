@@ -25,6 +25,11 @@ func (u *User) BeforeCreate(ctx context.Context) error {
 	return nil
 }
 
+func (u *User) BeforeSave(ctx context.Context) error {
+	u.Email = "update3@huh.com"
+	return nil
+}
+
 func setup() {
 	huh.Config("mysql", huh.DBConfig{
 		Master: "norris@(127.0.0.1:3306)/mysite?charset=utf8",
@@ -51,7 +56,7 @@ func dropTable() {
 	o.Exec(rawSQL)
 }
 
-func TestCreate(t *testing.T) {
+func TestEverything(t *testing.T) {
 	dropTable()
 	createTable()
 	// defer dropTable()
@@ -64,19 +69,21 @@ func TestCreate(t *testing.T) {
 	var receivers []User
 
 	// test create raw sql
-	c := o.Create().Of(ctx, &user)
+	c, _ := o.Create().Of(ctx, &user)
 	sqlStr := c.String()
-	if sqlStr != "INSERT INTO users (email,id) VALUES ('test@huh.com','1')" {
+	if sqlStr != "INSERT INTO users (email,id) VALUES ('update3@huh.com','1')" {
 		t.Errorf("sqlStr actual: %s", sqlStr)
 	}
 
+	user = User{Email: "test@huh.com", ID: 1}
 	// test normal create
 	o.Create().Do(ctx, &user)
 
 	receiver = User{}
 	o.Get(1).Do(ctx, &receiver)
-	if receiver != user {
-		t.Errorf("[create error] expect: %v, actual: %v", user, receiver)
+	expected := User{Email: "update3@huh.com", ID: 1}
+	if receiver != expected {
+		t.Errorf("[create error] expect: %v, actual: %v", expected, receiver)
 	}
 
 	// test create with hooks
@@ -105,9 +112,9 @@ func TestCreate(t *testing.T) {
 	o.Create().Do(ctx, &user4)
 
 	receivers = []User{}
-	o.Where("email = ?", "update@huh.com").Do(ctx, &receivers)
-	if len(receivers) != 2 {
-		t.Errorf("[where error] result count should be 2")
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
+	if len(receivers) != 1 {
+		t.Errorf("[where error] result count should be 1")
 	}
 
 	receivers = []User{}
@@ -118,12 +125,6 @@ func TestCreate(t *testing.T) {
 		t.Errorf("[where error] result count should be 0")
 	}
 
-	o.Where("email = ?", "update2@huh.com").Do(ctx, &receivers)
-
-	if len(receivers) != 2 {
-		t.Errorf("[where error] result count should be 2")
-	}
-
 	// test transaction
 	user3 := User{ID: 3, Email: "test3@huh.com"}
 	o.Transaction(ctx, func(h *huh.Orm) {
@@ -131,9 +132,15 @@ func TestCreate(t *testing.T) {
 		h.MustCreate().Do(ctx, &user)
 	})
 
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
+
+	if len(receivers) != 2 {
+		t.Errorf("[where error] result count should be 2")
+	}
+
 	// test get by pk
 	user5 := User{}
-	expected := User{ID: uint32(1), Email: "update2@huh.com"}
+	expected = User{ID: uint32(1), Email: "update2@huh.com"}
 	o.Get(1).Do(ctx, &user5)
 	if user5 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user5)
@@ -141,8 +148,8 @@ func TestCreate(t *testing.T) {
 
 	// test get by condition
 	user6 := User{}
-	expected = User{ID: uint32(4), Email: "update2@huh.com"}
-	o.GetBy("email", "update2@huh.com", "id", 4).Do(ctx, &user6)
+	expected = User{ID: uint32(4), Email: "update3@huh.com"}
+	o.GetBy("email", "update3@huh.com", "id", 4).Do(ctx, &user6)
 	if user6 != expected {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user6)
 	}
@@ -159,10 +166,10 @@ func TestCreate(t *testing.T) {
 
 	// test where
 	var users = []User{}
-	o.Where("email = ?", "update2@huh.com").Do(ctx, &users)
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
 	expects := []User{
-		{Email: "update2@huh.com", ID: 1},
-		{Email: "update2@huh.com", ID: 4},
+		{Email: "update3@huh.com", ID: 3},
+		{Email: "update3@huh.com", ID: 4},
 	}
 	for i, expected := range expects {
 		if users[i] != expected {
@@ -171,17 +178,17 @@ func TestCreate(t *testing.T) {
 	}
 
 	users = []User{}
-	o.Where("email = ?", "update2@huh.com").Limit(1).Offset(1).Do(ctx, &users)
-	expected = User{Email: "update2@huh.com", ID: 4}
+	o.Where("email = ?", "update3@huh.com").Limit(1).Offset(1).Do(ctx, &users)
+	expected = User{Email: "update3@huh.com", ID: 4}
 	if expected != users[0] {
 		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
 	}
 
 	users = []User{}
-	o.Where("email = ?", "update2@huh.com").Order("id desc").Do(ctx, &users)
+	o.Where("email = ?", "update3@huh.com").Order("id desc").Do(ctx, &users)
 	expects = []User{
-		{Email: "update2@huh.com", ID: 4},
-		{Email: "update2@huh.com", ID: 1},
+		{Email: "update3@huh.com", ID: 4},
+		{Email: "update3@huh.com", ID: 3},
 	}
 	for i, expected := range expects {
 		if users[i] != expected {

@@ -2,22 +2,26 @@ package huh
 
 import "context"
 
-func BeginTransactionHandler(ctx context.Context, o *Orm) error {
+func BeginTransactionHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	c := o.Begin()
 	// TODO begin
-	return nil
+	return c, nil
 }
 
-func CommitOrRollbackTransactionHandler(ctx context.Context, o *Orm) error {
+func CommitOrRollbackTransactionHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	err := o.Commit()
 	// Commit
-	return nil
+	return o, err
 }
 
-func BeforeSaveHandler(ctx context.Context, o *Orm) error {
-	return o.CallMethod("BeforeSave")
+func BeforeSaveHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	err := o.CallMethod("BeforeSave")
+	return o, err
 }
 
-func AfterSaveHandler(ctx context.Context, o *Orm) error {
-	return o.CallMethod("AfterSave")
+func AfterSaveHandler(ctx context.Context, o *Orm) (*Orm, error) {
+	err := o.CallMethod("AfterSave")
+	return o, err
 }
 
 type CommonCallbackProcessor struct {
@@ -28,12 +32,13 @@ func (cp *CommonCallbackProcessor) Register(handler CallbackHandler) {
 	cp.Handlers = append(cp.Handlers, handler)
 }
 
-func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) error {
+func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) (*Orm, error) {
 	for _, handler := range cp.Handlers {
-		err := handler(ctx, o)
+		c, err := handler(ctx, o)
+		o = c
 		if err != nil {
-			return err
+			return o, err
 		}
 	}
-	return nil
+	return o, nil
 }

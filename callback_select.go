@@ -12,8 +12,15 @@ func init() {
 	selectCallback.processor.Register(SelectHandler)
 }
 
-func SelectHandler(ctx context.Context, o *Orm) error {
+func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 	var results []map[string]string
+
+	o.model = GetModel(o.result)
+	o.parseStatement()
+
+	if !o.do {
+		return o, nil
+	}
 
 	rows, _ := o.Query(o.String())
 	defer rows.Close()
@@ -39,7 +46,7 @@ func SelectHandler(ctx context.Context, o *Orm) error {
 	}
 
 	err := o.setSelectResult(results)
-	return err
+	return o, err
 }
 
 func canAssign(v reflect.Value) bool {

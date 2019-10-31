@@ -22,8 +22,12 @@ type Orm struct {
 	must      bool
 	statement SQLStatement
 	newValues map[string]interface{}
+	// whether implement the sql
+	do bool
 
 	scope Scope
+	// store the input interface
+	result interface{}
 }
 
 // New initialize a Orm struct
@@ -147,8 +151,9 @@ func (o *Orm) Order(str string) *Orm {
 
 // Do is usually the end of the orm schedule, assign result to in or get data from in
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
-	c := o.Of(ctx, in)
-	err := c.callCallbacks(ctx)
+	c := o.clone()
+	c.do = true
+	c, err := c.Of(ctx, in)
 
 	if c.must {
 		checkError(err)
@@ -157,15 +162,12 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 }
 
 // Of parse the sql statement without calling the it
-func (o *Orm) Of(ctx context.Context, in interface{}) *Orm {
+func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 	c := o.clone()
-	c.model = GetModel(in)
+	c.result = in
 
-	statement, err := c.parseStatement(in)
-	checkError(err)
-	c.statement = statement
-
-	return c
+	c, err := c.callCallbacks(ctx)
+	return c, err
 }
 
 // Begin is the begin of transaction
@@ -253,7 +255,9 @@ func (o *Orm) CallMethod(methodName string) error {
 	var argsValue []reflect.Value
 	var result []reflect.Value
 
-	if methodValue := o.model.Value.MethodByName(methodName); methodValue.IsValid() {
+	reflectValue := reflect.ValueOf(o.result)
+
+	if methodValue := reflectValue.MethodByName(methodName); methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func(context.Context) error: // BeforeCreate
 			argsValue = []reflect.Value{reflect.ValueOf(ctx)}
@@ -283,10 +287,12 @@ func (o *Orm) clone() *Orm {
 		statement: o.statement,
 		newValues: o.newValues,
 		scope:     o.scope,
+		result:    o.result,
+		do:        o.do,
 	}
 }
 
-func (o *Orm) callCallbacks(ctx context.Context) error {
+func (o *Orm) callCallbacks(ctx context.Context) (*Orm, error) {
 	var cb *Callback
 	switch o.operator {
 	case OperatorCreate:
@@ -296,36 +302,37 @@ func (o *Orm) callCallbacks(ctx context.Context) error {
 	case OperatorSelect:
 		cb = selectCallback
 	default:
-		return ErrInvalidOperator
+		return o, ErrInvalidOperator
 	}
 
-	err := cb.processor.Process(ctx, o)
-	return err
+	o, err := cb.processor.Process(ctx, o)
+	return o, err
 }
 
-func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
+func (o *Orm) parseStatement() {
+	var s SQLStatement
 	switch o.operator {
 	case OperatorCreate:
-		return InsertStatement{
+		s = InsertStatement{
 			TableName: o.model.TableName,
 			Columns:   o.model.Columns(),
 			Values:    o.model.Values(),
-		}, nil
+		}
 	case OperatorUpdate:
-		return UpdateStatement{
+		s = UpdateStatement{
 			WS:           o.scope.WS,
 			TableName:    o.model.TableName,
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
-		}, nil
+		}
 	case OperatorSelect:
 		primaryKey := o.model.PrimaryField.ColName
 
 		if o.scope.WS.ByPK {
 			o.scope.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
-		return SelectStatement{
+		s = SelectStatement{
 			WS:              o.scope.WS,
 			Limit:           o.scope.Limit,
 			Offset:          o.scope.Offset,
@@ -334,9 +341,9 @@ func (o *Orm) parseStatement(in interface{}) (SQLStatement, error) {
 			SelectedColumns: o.model.Columns(),
 			PrimaryKey:      primaryKey,
 			PrimaryValue:    o.model.PrimaryField.Value,
-			Result:          in,
-		}, nil
+		}
 	default:
-		return nil, ErrInvalidOperator
+		s = nil
 	}
+	o.statement = s
 }

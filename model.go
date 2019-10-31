@@ -2,7 +2,6 @@ package huh
 
 import (
 	"reflect"
-	"strings"
 )
 
 var defaultPrimaryKey = "id"
@@ -27,16 +26,16 @@ func GetModel(in interface{}) *Model {
 	var isPrimaryKey bool
 
 	// clone an `in`
-	in = cloneInterface(in)
+	inC := cloneInterface(in)
 
 	colToFieldNameMap := make(map[string]string)
 
-	reflectType := reflect.TypeOf(in)
+	reflectType := reflect.TypeOf(inC)
 
 	if reflectType.Kind() == reflect.Ptr {
-		reflectValue = reflect.ValueOf(in).Elem()
+		reflectValue = reflect.ValueOf(inC).Elem()
 	} else {
-		reflectValue = reflect.ValueOf(in)
+		reflectValue = reflect.ValueOf(inC)
 	}
 
 	// deal with slice, etc. o.Where(...).Do(ctx, &users)
@@ -59,7 +58,7 @@ func GetModel(in interface{}) *Model {
 		isPrimaryKey = false
 		tagMap = parseTagMap(reflectValue.Type().Field(i).Tag)
 		fieldName := reflectValue.Type().Field(i).Name
-		colName := strings.ToLower(fieldName)
+		colName := camelCaseToUnderline(fieldName)
 		// check isPrimaryKey
 		for k, v := range tagMap {
 			if k == "PK" {

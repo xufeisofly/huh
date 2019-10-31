@@ -22,10 +22,11 @@ type Orm struct {
 	must      bool
 	statement SQLStatement
 	newValues map[string]interface{}
-	do        bool
+	// whether implement the sql
+	do bool
 
 	scope Scope
-
+	// store the input interface
 	result interface{}
 }
 

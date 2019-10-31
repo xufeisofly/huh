@@ -1,6 +1,10 @@
 package huh
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+	"unicode"
+)
 
 func checkError(err error) {
 	if err != nil {
@@ -22,6 +26,24 @@ func uint8ToString(bs []uint8) string {
 		b[i] = byte(v)
 	}
 	return string(b)
+}
+
+func camelCaseToUnderline(camelStr string) string {
+	var result string
+	for i, c := range camelStr {
+		if unicode.IsUpper(c) {
+			if i == 0 || unicode.IsUpper([]rune(camelStr)[i-1]) {
+				result += strings.ToLower(string(c))
+				continue
+			} else {
+				result += "_"
+			}
+			result += strings.ToLower(string(c))
+		} else {
+			result += string(c)
+		}
+	}
+	return result
 }
 
 // cloneInterface deep clone an interface

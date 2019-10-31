@@ -2,7 +2,6 @@ package huh
 
 import (
 	"reflect"
-	"strings"
 )
 
 var defaultPrimaryKey = "id"
@@ -59,7 +58,7 @@ func GetModel(in interface{}) *Model {
 		isPrimaryKey = false
 		tagMap = parseTagMap(reflectValue.Type().Field(i).Tag)
 		fieldName := reflectValue.Type().Field(i).Name
-		colName := strings.ToLower(fieldName)
+		colName := camelCaseToUnderline(fieldName)
 		// check isPrimaryKey
 		for k, v := range tagMap {
 			if k == "PK" {

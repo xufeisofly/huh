@@ -77,11 +77,13 @@
 ** TODOs
 
 **** DONE create
-**** TODO create callback transaction
+**** DONE create callback
 **** DONE update updatewithwhere
 **** DONE get getby
 **** DONE get should match col name order, not select *
 **** DONE offset limit order
+**** TODO created_at updated_at
+**** TODO embeded transaction
 **** TODO destroy
 **** DONE transaction
 **** TODO count

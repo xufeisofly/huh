@@ -5,13 +5,16 @@ import (
 	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/xufeisofly/huh"
 )
 
 type User struct {
-	Email string
-	ID    uint32 `huh:"pk"`
+	Email     string
+	ID        uint32    `huh:"pk"`
+	CreatedAt time.Time `huh:"readonly"`
+	UpdatedAt time.Time `huh:"readonly"`
 }
 
 func (u User) TableName() string {
@@ -45,6 +48,8 @@ func createTable() {
 	rawSQL := `CREATE TABLE users (
 id int(11) NOT NULL AUTO_INCREMENT,
 email varchar(255) NOT NULL,
+created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (id)
 )`
 	o.Exec(rawSQL)
@@ -82,7 +87,8 @@ func TestEverything(t *testing.T) {
 	receiver = User{}
 	o.Get(1).Do(ctx, &receiver)
 	expected := User{Email: "update3@huh.com", ID: 1}
-	if receiver != expected {
+
+	if receiver.Email != expected.Email {
 		t.Errorf("[create error] expect: %v, actual: %v", expected, receiver)
 	}
 
@@ -142,7 +148,7 @@ func TestEverything(t *testing.T) {
 	user5 := User{}
 	expected = User{ID: uint32(1), Email: "update2@huh.com"}
 	o.Get(1).Do(ctx, &user5)
-	if user5 != expected {
+	if user5.Email != expected.Email {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user5)
 	}
 
@@ -150,7 +156,7 @@ func TestEverything(t *testing.T) {
 	user6 := User{}
 	expected = User{ID: uint32(4), Email: "update3@huh.com"}
 	o.GetBy("email", "update3@huh.com", "id", 4).Do(ctx, &user6)
-	if user6 != expected {
+	if user6.Email != expected.Email {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user6)
 	}
 
@@ -160,7 +166,7 @@ func TestEverything(t *testing.T) {
 		"id":    1,
 		"email": "update2@huh.com",
 	}).Do(ctx, &user7)
-	if user7 != expected {
+	if user7.Email != expected.Email {
 		t.Errorf("get error, expected: %v, actual: %v", expected, user7)
 	}
 
@@ -172,7 +178,7 @@ func TestEverything(t *testing.T) {
 		{Email: "update3@huh.com", ID: 4},
 	}
 	for i, expected := range expects {
-		if users[i] != expected {
+		if users[i].Email != expected.Email {
 			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
 		}
 	}
@@ -180,7 +186,7 @@ func TestEverything(t *testing.T) {
 	users = []User{}
 	o.Where("email = ?", "update3@huh.com").Limit(1).Offset(1).Do(ctx, &users)
 	expected = User{Email: "update3@huh.com", ID: 4}
-	if expected != users[0] {
+	if expected.Email != users[0].Email {
 		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
 	}
 
@@ -191,7 +197,7 @@ func TestEverything(t *testing.T) {
 		{Email: "update3@huh.com", ID: 3},
 	}
 	for i, expected := range expects {
-		if users[i] != expected {
+		if users[i].Email != expected.Email {
 			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
 		}
 	}

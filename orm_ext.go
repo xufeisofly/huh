@@ -1,11 +1,94 @@
 package huh
 
 import (
+	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/spf13/cast"
 )
+
+// CallMethod call a model method by methodName
+func (o *Orm) CallMethod(methodName string) error {
+	ctx := context.Background()
+	var argsValue []reflect.Value
+	var result []reflect.Value
+
+	reflectValue := reflect.ValueOf(o.result)
+
+	if methodValue := reflectValue.MethodByName(methodName); methodValue.IsValid() {
+		switch methodValue.Interface().(type) {
+		case func(context.Context) error: // BeforeCreate
+			argsValue = []reflect.Value{reflect.ValueOf(ctx)}
+			result = methodValue.Call(argsValue)
+
+			if result[0].Interface() == interface{}(nil) {
+				return nil
+			}
+			return result[0].Interface().(error)
+		default:
+			return ErrMethodNotFound
+		}
+	}
+	return nil
+}
+
+func (o *Orm) callCallbacks(ctx context.Context) (*Orm, error) {
+	var cb *Callback
+	switch o.operator {
+	case OperatorCreate:
+		cb = createCallback
+	case OperatorUpdate:
+		cb = updateCallback
+	case OperatorSelect:
+		cb = selectCallback
+	default:
+		return o, ErrInvalidOperator
+	}
+
+	o, err := cb.processor.Process(ctx, o)
+	return o, err
+}
+
+func (o *Orm) parseStatement() {
+	var s SQLStatement
+	switch o.operator {
+	case OperatorCreate:
+		s = InsertStatement{
+			TableName: o.model.TableName,
+			Columns:   o.model.WritableColumns(),
+			Values:    o.model.WritableValues(),
+		}
+	case OperatorUpdate:
+		s = UpdateStatement{
+			WS:           o.scope.WS,
+			TableName:    o.model.TableName,
+			PrimaryKey:   o.model.PrimaryField.ColName,
+			PrimaryValue: o.model.PrimaryField.Value,
+			Values:       o.newValues,
+		}
+	case OperatorSelect:
+		primaryKey := o.model.PrimaryField.ColName
+
+		if o.scope.WS.ByPK {
+			o.scope.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
+		}
+		s = SelectStatement{
+			WS:              o.scope.WS,
+			Limit:           o.scope.Limit,
+			Offset:          o.scope.Offset,
+			Order:           o.scope.Order,
+			TableName:       o.model.TableName,
+			SelectedColumns: o.model.Columns(),
+			PrimaryKey:      primaryKey,
+			PrimaryValue:    o.model.PrimaryField.Value,
+		}
+	default:
+		s = nil
+	}
+	o.statement = s
+}
 
 // setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)
 func (o *Orm) setSelectResult(results []map[string]string) error {
@@ -80,6 +163,13 @@ func (o *Orm) setOutputResult(output reflect.Value, data map[string]string) erro
 				return err
 			}
 			f.SetFloat(colFloat)
+		case reflect.Struct: // time.Time
+			layout := "2006-01-02 15:04:05"
+			colTime, err := time.Parse(layout, col)
+			if err != nil {
+				return err
+			}
+			f.Set(reflect.ValueOf(colTime))
 		default:
 			return fmt.Errorf("unknow field type %v", f.Kind())
 		}

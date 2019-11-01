@@ -43,6 +43,8 @@ func (o *Orm) callCallbacks(ctx context.Context) (*Orm, error) {
 		cb = updateCallback
 	case OperatorSelect:
 		cb = selectCallback
+	case OperatorDelete:
+		cb = destroyCallback
 	default:
 		return o, ErrInvalidOperator
 	}
@@ -67,6 +69,13 @@ func (o *Orm) parseStatement() {
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
 			Values:       o.newValues,
+		}
+	case OperatorDelete:
+		s = DeleteStatement{
+			WS:           o.scope.WS,
+			TableName:    o.model.TableName,
+			PrimaryKey:   o.model.PrimaryField.ColName,
+			PrimaryValue: o.model.PrimaryField.Value,
 		}
 	case OperatorSelect:
 		primaryKey := o.model.PrimaryField.ColName

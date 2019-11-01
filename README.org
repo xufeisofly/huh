@@ -84,7 +84,7 @@
 **** DONE offset limit order
 **** DONE created_at updated_at
 **** TODO embeded transaction
-**** TODO destroy
+**** DONE destroy
 **** DONE transaction
 **** TODO count
 **** TODO group by

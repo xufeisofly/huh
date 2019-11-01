@@ -3,15 +3,15 @@ package huh
 import "context"
 
 func BeginTransactionHandler(ctx context.Context, o *Orm) (*Orm, error) {
-	c := o.Begin()
+	// c := o.Begin()
 	// TODO begin
-	return c, nil
+	return o, nil
 }
 
 func CommitOrRollbackTransactionHandler(ctx context.Context, o *Orm) (*Orm, error) {
-	err := o.Commit()
+	// err := o.Commit()
 	// Commit
-	return o, err
+	return o, nil
 }
 
 func BeforeSaveHandler(ctx context.Context, o *Orm) (*Orm, error) {

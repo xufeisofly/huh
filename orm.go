@@ -77,6 +77,26 @@ func (o *Orm) update(arg map[string]interface{}) *Orm {
 	return c
 }
 
+func (o *Orm) MustUpdate(args ...interface{}) *Orm {
+	c := o.clone()
+	c.must = true
+	c.Update(args)
+	return c
+}
+
+func (o *Orm) Destroy() *Orm {
+	c := o.clone()
+	c.operator = OperatorDelete
+	return c
+}
+
+func (o *Orm) MustDestroy() *Orm {
+	c := o.clone()
+	c.operator = OperatorDelete
+	c.must = true
+	return c
+}
+
 // Get by pk, will panic if result if none
 func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()

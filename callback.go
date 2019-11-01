@@ -27,6 +27,12 @@ func (c *Callback) Update() *Callback {
 	return cc
 }
 
+func (c *Callback) Destroy() *Callback {
+	cc := c.clone()
+	cc.processor = &DestroyCallbackProcessor{}
+	return cc
+}
+
 func (c *Callback) Select() *Callback {
 	cc := c.clone()
 	cc.processor = &SelectCallbackProcessor{}

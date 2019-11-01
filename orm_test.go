@@ -131,12 +131,14 @@ func TestEverything(t *testing.T) {
 		t.Errorf("[where error] result count should be 0")
 	}
 
-	// test transaction
+	// test transaction no create
 	user3 := User{ID: 3, Email: "test3@huh.com"}
 	o.Transaction(ctx, func(h *huh.Orm) {
 		h.Create().Do(ctx, &user3)
 		h.MustCreate().Do(ctx, &user)
 	})
+
+	o.Create().Do(ctx, &user3)
 
 	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
 
@@ -183,6 +185,7 @@ func TestEverything(t *testing.T) {
 		}
 	}
 
+	// test limit offset
 	users = []User{}
 	o.Where("email = ?", "update3@huh.com").Limit(1).Offset(1).Do(ctx, &users)
 	expected = User{Email: "update3@huh.com", ID: 4}
@@ -190,6 +193,7 @@ func TestEverything(t *testing.T) {
 		t.Errorf("where error, expected: %v, actual: %v", expected, users[0])
 	}
 
+	// test order by
 	users = []User{}
 	o.Where("email = ?", "update3@huh.com").Order("id desc").Do(ctx, &users)
 	expects = []User{
@@ -200,6 +204,25 @@ func TestEverything(t *testing.T) {
 		if users[i].Email != expected.Email {
 			t.Errorf("where error, expected: %v, actual: %v", expected, users[i])
 		}
+	}
+
+	// test destroy
+	user = User{}
+	o.Get(1).Do(ctx, &user)
+	o.Destroy().Do(ctx, &user)
+
+	user = User{}
+	o.GetBy("email", "update2@huh.com").Do(ctx, &user)
+	if (User{}) != user {
+		t.Errorf("[destroy error], destroy failed")
+	}
+
+	// test destroy where
+	o.Where("email = ?", "update3@huh.com").Destroy().Do(ctx, User{})
+	users = []User{}
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
+	if len(users) != 0 {
+		t.Errorf("[destroy error], destroy failed, expected: %v, actual: %v", []User{}, users)
 	}
 }
 

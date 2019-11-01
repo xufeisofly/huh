@@ -78,6 +78,32 @@ func (us UpdateStatement) String() string {
 	}
 }
 
+type DeleteStatement struct {
+	WS           WhereStatement
+	TableName    string
+	PrimaryKey   string
+	PrimaryValue interface{}
+}
+
+func (ds DeleteStatement) String() string {
+	// DELETE FROM `users` WHERE id = 1
+	if len(ds.WS.Values) != 0 {
+		return fmt.Sprintf(
+			"DELETE FROM `%s` WHERE %s",
+			ds.TableName,
+			ds.WS.String(),
+		)
+	} else if ds.PrimaryValue != nil {
+		return fmt.Sprintf(
+			"DELETE FROM `%s` WHERE %s",
+			ds.TableName,
+			fmt.Sprintf("%s = '%v'", ds.PrimaryKey, ds.PrimaryValue),
+		)
+	} else {
+		return ""
+	}
+}
+
 type SelectStatement struct {
 	WS              WhereStatement
 	TableName       string

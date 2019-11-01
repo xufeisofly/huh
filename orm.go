@@ -90,6 +90,13 @@ func (o *Orm) Destroy() *Orm {
 	return c
 }
 
+func (o *Orm) MustDestroy() *Orm {
+	c := o.clone()
+	c.operator = OperatorDelete
+	c.must = true
+	return c
+}
+
 // Get by pk, will panic if result if none
 func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()

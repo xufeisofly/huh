@@ -29,13 +29,22 @@ func (t *Tx) Rollback() error {
 	return t.tx.Rollback()
 }
 
-func (t *Tx) AddSavePoint(name string) {
-	sp := SavePoint{name: name}
+func (t *Tx) AddSavePoint(sp SavePoint) {
 	t.savePointStack.Push(sp)
 }
 
-func (t *Tx) NextSavePoint() string {
-	return t.savePointStack.Pop().name
+func (t *Tx) NextSavePoint() SavePoint {
+	return t.savePointStack.Pop()
+}
+
+func (t *Tx) RollbackToSP(sp SavePoint) error {
+	_, err := t.Exec("rollback to savepoint ?", sp.name)
+	return err
+}
+
+func (t *Tx) ReleaseSP(sp SavePoint) error {
+	_, err := t.Exec("release savepoint ?", sp.name)
+	return err
 }
 
 func (sps *SavePointStack) curSavePoint() SavePoint {

@@ -197,11 +197,15 @@ func (o *Orm) Begin() *Orm {
 
 	if c.inTransaction() {
 		c.tx.parent = &c.tx
-		c.tx.AddSavePoint(c.tx.parent.name)
+		sp := SavePoint{name: c.tx.parent.name}
+		c.tx.AddSavePoint(sp)
 	} else {
 		tx, err := c.masterDB.Begin()
 		checkError(err)
-		c.tx = Tx{tx: tx, name: cast.ToString(time.Now().Unix())}
+		c.tx = Tx{
+			tx:   tx,
+			name: cast.ToString(time.Now().Unix()),
+		}
 	}
 
 	return c
@@ -219,7 +223,7 @@ func (o *Orm) inNestedTransaction() bool {
 func (o *Orm) Commit() error {
 	c := o.clone()
 	if c.inNestedTransaction() {
-		c.tx.Exec("release savepoint ?", c.tx.NextSavePoint())
+		c.tx.ReleaseSP(c.tx.NextSavePoint())
 		return nil
 	}
 	return c.tx.Commit()
@@ -229,7 +233,7 @@ func (o *Orm) Commit() error {
 func (o *Orm) Rollback() error {
 	c := o.clone()
 	if c.inNestedTransaction() {
-		c.tx.Exec("rollback to savepoint ?", c.tx.NextSavePoint())
+		c.tx.RollbackToSP(c.tx.NextSavePoint())
 		return nil
 	}
 	return c.tx.Rollback()

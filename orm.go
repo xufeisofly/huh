@@ -104,7 +104,10 @@ func (o *Orm) Get(pk interface{}) *Orm {
 	c := o.clone()
 	c.operator = OperatorSelect
 
-	c.scope.WS = WhereStatement{Values: []interface{}{pk}, ByPK: true}
+	c.scope.WSs = append(
+		c.scope.WSs,
+		WhereStatement{Values: []interface{}{pk}, ByPK: true},
+	)
 	c.scope.Limit = 1
 	c.must = true
 	return c
@@ -132,11 +135,11 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 		values = append(values, v)
 	}
 
-	c.scope.WS = WhereStatement{
+	c.scope.WSs = append(c.scope.WSs, WhereStatement{
 		Condition: strings.Join(conditionArr, " AND "),
 		Values:    values,
 		ByPK:      false,
-	}
+	})
 	c.scope.Limit = 1
 	return c
 }
@@ -146,7 +149,10 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 	// default OperatorSelect
 	c.operator = OperatorSelect
-	c.scope.WS = WhereStatement{Condition: sqlStatement, Values: values}
+	c.scope.WSs = append(
+		c.scope.WSs,
+		WhereStatement{Condition: sqlStatement, Values: values},
+	)
 	return c
 }
 

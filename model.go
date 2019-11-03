@@ -108,8 +108,17 @@ func getPrimaryKey(in interface{}) (string, error) {
 func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string, error) {
 	var tableName string
 
-	// TODO 目前还不支持 *User 下面定义 TableName
-	if methodValue := reflectValue.MethodByName("TableName"); methodValue.IsValid() {
+	methodValue := reflectValue.MethodByName("TableName")
+
+	// if no method under in, then check if it is under in's pointer
+	if !methodValue.IsValid() {
+
+		inPtr := reflect.New(reflectValue.Type()).Interface()
+		reflectValue = reflect.ValueOf(inPtr)
+		methodValue = reflectValue.MethodByName("TableName")
+	}
+
+	if methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func() string:
 			result := methodValue.Call([]reflect.Value{})
@@ -120,6 +129,7 @@ func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string,
 		return tableName, nil
 	}
 
+	// otherwise take default name from in
 	if tableName == "" {
 		if reflectType.Kind() == reflect.Ptr {
 			tableName = reflectType.Elem().Name()

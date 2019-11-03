@@ -17,7 +17,7 @@ type User struct {
 	UpdatedAt time.Time `huh:"readonly"`
 }
 
-func (u User) TableName() string {
+func (u *User) TableName() string {
 	return "users"
 }
 
@@ -240,10 +240,18 @@ func TestEverything(t *testing.T) {
 		})
 	})
 
+	users = []User{}
 	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
 
 	if users[0].ID != 8 || users[1].ID != 9 {
 		t.Errorf("[nested transaction error]")
+	}
+
+	// test multi where
+	users = []User{}
+	o.Where("email = ?", "update3@huh.com").Where("id > ?", 8).Do(ctx, &users)
+	if len(users) != 1 {
+		t.Errorf("[multi where error] users should be 1")
 	}
 }
 

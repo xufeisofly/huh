@@ -6,13 +6,11 @@ var updateCallback *Callback
 
 func init() {
 	updateCallback = DefaultCallback.Update()
-	updateCallback.processor.Register(BeginTransactionHandler)
 	updateCallback.processor.Register(BeforeUpdateHandler)
 	updateCallback.processor.Register(BeforeSaveHandler)
 	updateCallback.processor.Register(UpdateHandler)
 	updateCallback.processor.Register(AfterSaveHandler)
 	updateCallback.processor.Register(AfterUpdateHandler)
-	updateCallback.processor.Register(CommitOrRollbackTransactionHandler)
 }
 
 func BeforeUpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {

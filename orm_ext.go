@@ -64,7 +64,7 @@ func (o *Orm) parseStatement() {
 		}
 	case OperatorUpdate:
 		s = UpdateStatement{
-			WS:           o.scope.WS,
+			WS:           o.scope.parseWhereStatement(),
 			TableName:    o.model.TableName,
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
@@ -72,19 +72,20 @@ func (o *Orm) parseStatement() {
 		}
 	case OperatorDelete:
 		s = DeleteStatement{
-			WS:           o.scope.WS,
+			WS:           o.scope.parseWhereStatement(),
 			TableName:    o.model.TableName,
 			PrimaryKey:   o.model.PrimaryField.ColName,
 			PrimaryValue: o.model.PrimaryField.Value,
 		}
 	case OperatorSelect:
 		primaryKey := o.model.PrimaryField.ColName
+		ws := o.scope.parseWhereStatement()
 
-		if o.scope.WS.ByPK {
-			o.scope.WS.Condition = fmt.Sprintf("%s = ?", primaryKey)
+		if ws.ByPK {
+			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
 		s = SelectStatement{
-			WS:              o.scope.WS,
+			WS:              ws,
 			Limit:           o.scope.Limit,
 			Offset:          o.scope.Offset,
 			Order:           o.scope.Order,

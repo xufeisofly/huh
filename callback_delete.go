@@ -6,11 +6,9 @@ var destroyCallback *Callback
 
 func init() {
 	destroyCallback = DefaultCallback.Destroy()
-	destroyCallback.processor.Register(BeginTransactionHandler)
 	destroyCallback.processor.Register(BeforeDestroyHandler)
 	destroyCallback.processor.Register(DestroyHandler)
 	destroyCallback.processor.Register(AfterDestroyHandler)
-	destroyCallback.processor.Register(CommitOrRollbackTransactionHandler)
 }
 
 func BeforeDestroyHandler(ctx context.Context, o *Orm) (*Orm, error) {

@@ -108,8 +108,10 @@ func getPrimaryKey(in interface{}) (string, error) {
 func getTableName(reflectValue reflect.Value, reflectType reflect.Type) (string, error) {
 	var tableName string
 
+	methodValue := reflectValue.MethodByName("TableName")
+
 	// TODO 目前还不支持 *User 下面定义 TableName
-	if methodValue := reflectValue.MethodByName("TableName"); methodValue.IsValid() {
+	if methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func() string:
 			result := methodValue.Call([]reflect.Value{})

@@ -68,9 +68,10 @@
        o2.MustCreate().Do(ctx, &user)
 
 	   o2.Transaction(ctx, func(o3 *huh.Orm){
-	       o3.MustCreate().Do(ctx, &user2)
+	       o3.MustCreate().Do(ctx, &user2)  // panic
 	   })
    })
+   // => only create user
    
    #+END_SRC
 
@@ -83,7 +84,7 @@
 **** DONE get should match col name order, not select *
 **** DONE offset limit order
 **** DONE created_at updated_at
-**** TODO embeded transaction
+**** DONE nested transaction
 **** DONE destroy
 **** DONE transaction
 **** TODO count

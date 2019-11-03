@@ -17,7 +17,7 @@ type User struct {
 	UpdatedAt time.Time `huh:"readonly"`
 }
 
-func (u User) TableName() string {
+func (u *User) TableName() string {
 	return "users"
 }
 
@@ -62,9 +62,8 @@ func dropTable() {
 }
 
 func TestEverything(t *testing.T) {
-	dropTable()
 	createTable()
-	// defer dropTable()
+	defer dropTable()
 
 	o := huh.New()
 	ctx := huh.Context()

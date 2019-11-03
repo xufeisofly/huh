@@ -3,8 +3,12 @@ package huh
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/spf13/cast"
 )
 
 // Orm is the base struct
@@ -12,8 +16,7 @@ type Orm struct {
 	masterDB *huhDB
 	slaveDBs []*huhDB
 	// transaction
-	tx      Tx
-	txCount int
+	tx Tx
 
 	callbacks []Callback
 	model     *Model
@@ -34,7 +37,6 @@ func New() *Orm {
 	return &Orm{
 		masterDB: currentDB,
 		must:     false,
-		txCount:  0,
 	}
 }
 
@@ -193,50 +195,64 @@ func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 func (o *Orm) Begin() *Orm {
 	c := o.clone()
 
-	// if already in transaction, just increment txCount
 	if c.inTransaction() {
-		c.txCount++
 		c.tx.parent = &c.tx
+		c.tx.AddSavePoint(c.tx.parent.name)
 	} else {
-		// flatify embedded transaction, add function to parentTx deferedTasks
-		// deferedTasks will be executed when the last commit called
-		// the deferedTask will be cleared when the its rollback called
 		tx, err := c.masterDB.Begin()
 		checkError(err)
-		c.tx.tx = tx
+		c.tx = Tx{tx: tx, name: cast.ToString(time.Now().Unix())}
 	}
 
 	return c
 }
 
 func (o *Orm) inTransaction() bool {
-	return o.txCount > 0
+	return o.tx.tx != nil
+}
+
+func (o *Orm) inNestedTransaction() bool {
+	return len(o.tx.savePointStack.SavePoints) > 0
 }
 
 // Commit the transaction
 func (o *Orm) Commit() error {
-	if o.inTransaction() {
-		o.txCount--
+	c := o.clone()
+	if c.inNestedTransaction() {
+		c.tx.Exec("release savepoint ?", c.tx.NextSavePoint())
+		return nil
 	}
-	return o.tx.tx.Commit()
+	return c.tx.Commit()
 }
 
 // Rollback the transaction
 func (o *Orm) Rollback() error {
-	if o.inTransaction() {
-		o.txCount--
+	c := o.clone()
+	if c.inNestedTransaction() {
+		c.tx.Exec("rollback to savepoint ?", c.tx.NextSavePoint())
+		return nil
 	}
-	return o.tx.tx.Rollback()
+	return c.tx.Rollback()
 }
 
 // Transaction call the transaction with a callback function
 func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 	c := o.Begin()
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			_ = c.Rollback()
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unknow panic")
+			}
+
+		} else {
+			err = c.Commit()
 		}
-		err = c.Commit()
 	}()
 
 	f(c)
@@ -246,8 +262,8 @@ func (o *Orm) Transaction(ctx context.Context, f func(o *Orm)) (err error) {
 // Exec the raw SQL
 func (o *Orm) Exec(rawSQL string) error {
 	var err error
-	if o.tx.tx != nil {
-		_, err = o.tx.tx.Exec(rawSQL)
+	if o.inTransaction() {
+		_, err = o.tx.Exec(rawSQL)
 	} else {
 		_, err = o.masterDB.Exec(rawSQL)
 	}
@@ -275,7 +291,6 @@ func (o *Orm) clone() *Orm {
 		callbacks: o.callbacks,
 		model:     o.model,
 		tx:        o.tx,
-		txCount:   o.txCount,
 		operator:  o.operator,
 		must:      o.must,
 		statement: o.statement,

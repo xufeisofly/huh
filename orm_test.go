@@ -224,6 +224,27 @@ func TestEverything(t *testing.T) {
 	if len(users) != 0 {
 		t.Errorf("[destroy error], destroy failed, expected: %v, actual: %v", []User{}, users)
 	}
+
+	// test nested transaction
+	user8 := User{ID: 8, Email: "test8@huh.com"}
+	user9 := User{ID: 9, Email: "test9@huh.com"}
+	o.Transaction(ctx, func(o *huh.Orm) {
+		o.Create().Do(ctx, &user8)
+		// user2 cannot be created
+		o.Transaction(ctx, func(o *huh.Orm) {
+			o.MustCreate().Do(ctx, &user2)
+		})
+
+		o.Transaction(ctx, func(o *huh.Orm) {
+			o.MustCreate().Do(ctx, &user9)
+		})
+	})
+
+	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
+
+	if users[0].ID != 8 || users[1].ID != 9 {
+		t.Errorf("[nested transaction error]")
+	}
 }
 
 func TestMain(m *testing.M) {

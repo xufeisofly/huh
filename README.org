@@ -47,7 +47,7 @@
    o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
    o.Where("Name = ?", "Trump").Order("id desc").Do(ctx, &users)
 
-   o.Select('name').Get(1).Do(ctx, &user)
+   o.Select("name", "id").Get(1).Do(ctx, &user)
 
    // Callbacks
    func (u *User) BeforeCreate(ctx) error {
@@ -87,6 +87,7 @@
 **** DONE nested transaction
 **** DONE destroy
 **** DONE transaction
+**** TODO select
 **** TODO count
 **** TODO group by
 **** TODO master and slave DB

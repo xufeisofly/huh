@@ -84,13 +84,14 @@ func (o *Orm) parseStatement() {
 		if ws.ByPK {
 			ws.Condition = fmt.Sprintf("%s = ?", primaryKey)
 		}
+
 		s = SelectStatement{
 			WS:              ws,
 			Limit:           o.scope.Limit,
 			Offset:          o.scope.Offset,
 			Order:           o.scope.Order,
 			TableName:       o.model.TableName,
-			SelectedColumns: o.model.Columns(),
+			SelectedColumns: o.selectedColumns(),
 			PrimaryKey:      primaryKey,
 			PrimaryValue:    o.model.PrimaryField.Value,
 		}
@@ -98,6 +99,16 @@ func (o *Orm) parseStatement() {
 		s = nil
 	}
 	o.statement = s
+}
+
+func (o *Orm) selectedColumns() []string {
+	var cols []string
+	if len(o.scope.Cols) != 0 {
+		cols = o.scope.Cols
+	} else {
+		cols = o.model.Columns()
+	}
+	return cols
 }
 
 // setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)

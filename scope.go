@@ -4,6 +4,7 @@ import "strings"
 
 type Scope struct {
 	WSs    []WhereStatement
+	Cols   []string
 	Limit  uint
 	Offset uint
 	Order  string

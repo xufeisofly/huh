@@ -170,9 +170,23 @@ func (o *Orm) Limit(i uint) *Orm {
 	return c
 }
 
+// Order By
 func (o *Orm) Order(str string) *Orm {
 	c := o.clone()
 	c.scope.Order = str
+	return c
+}
+
+// Select columns
+func (o *Orm) Select(cols ...string) *Orm {
+	c := o.clone()
+	c.scope.Cols = append(c.scope.Cols, cols...)
+	return c
+}
+
+// Count *
+func (o *Orm) Count() *Orm {
+	c := o.clone()
 	return c
 }
 

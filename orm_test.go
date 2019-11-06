@@ -241,7 +241,7 @@ func TestEverything(t *testing.T) {
 	})
 
 	users = []User{}
-	o.Where("email = ?", "update3@huh.com").Do(ctx, &users)
+	o.Where("email = 'update3@huh.com'").Do(ctx, &users)
 
 	if users[0].ID != 8 || users[1].ID != 9 {
 		t.Errorf("[nested transaction error]")

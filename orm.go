@@ -149,7 +149,7 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 
 	// Where("name", "sofly") => Where("name = ?", "sofly")
-	if !strings.Contains(sqlStatement, "?") {
+	if len(values) == 1 && !strings.Contains(sqlStatement, "?") {
 		sqlStatement += " = ?"
 	}
 	// default OperatorSelect
@@ -159,6 +159,11 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 		WhereStatement{Condition: sqlStatement, Values: values},
 	)
 	return c
+}
+
+func (o *Orm) First() *Orm {
+	c := o.clone()
+	return c.Limit(1)
 }
 
 // Offset pagination offset

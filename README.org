@@ -46,6 +46,7 @@
    o.Where("Name = ?", "Trump").Do(ctx, &users)
    o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
    o.Where("Name = ?", "Trump").Order("id desc").Do(ctx, &users)
+   o.Where("Name", []string{"Trump", "Obama"}).First().Do(ctx, &user)
 
    o.Select("name", "id").Get(1).Do(ctx, &user)
 
@@ -87,8 +88,7 @@
 **** DONE nested transaction
 **** DONE destroy
 **** DONE transaction
-**** TODO select
-**** TODO count
+**** DONE select
 **** TODO group by
 **** TODO master and slave DB
 **** TODO stability in various conditions

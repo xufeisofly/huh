@@ -249,7 +249,7 @@ func TestEverything(t *testing.T) {
 
 	// test multi where
 	users = []User{}
-	o.Where("email = ?", "update3@huh.com").Where("id > ?", 8).Do(ctx, &users)
+	o.Where("email", "update3@huh.com").Where("id > ?", 8).Do(ctx, &users)
 	if len(users) != 1 {
 		t.Errorf("[multi where error] users should be 1")
 	}

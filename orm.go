@@ -147,6 +147,11 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 // Where get multiple instances by raw sql
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
+
+	// Where("name", "sofly") => Where("name = ?", "sofly")
+	if !strings.Contains(sqlStatement, "?") {
+		sqlStatement += " = ?"
+	}
 	// default OperatorSelect
 	c.operator = OperatorSelect
 	c.scope.WSs = append(

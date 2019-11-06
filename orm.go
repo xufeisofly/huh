@@ -189,12 +189,6 @@ func (o *Orm) Select(cols ...string) *Orm {
 	return c
 }
 
-// Count *
-func (o *Orm) Count() *Orm {
-	c := o.clone()
-	return c
-}
-
 // Do is usually the end of the orm schedule, assign result to in or get data from in
 func (o *Orm) Do(ctx context.Context, in interface{}) error {
 	c := o.clone()

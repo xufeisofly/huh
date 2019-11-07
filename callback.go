@@ -8,6 +8,13 @@ type Callback struct {
 
 var DefaultCallback = &Callback{}
 
+var mainHandlers = map[string]bool{
+	"CreateHandler":  true,
+	"UpdateHandler":  true,
+	"SelectHandler":  true,
+	"DestroyHandler": true,
+}
+
 type CallbackProcessor interface {
 	Register(CallbackHandler)
 	Process(context.Context, *Orm) (*Orm, error)

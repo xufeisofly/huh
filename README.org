@@ -89,10 +89,10 @@
 **** DONE destroy
 **** DONE transaction
 **** DONE select
-**** TODO group by
+**** TODO errors standard
 **** TODO master and slave DB
 **** TODO stability in various conditions
 **** TODO code enhancement
 **** TODO annotation
 **** TODO syncMutex
-**** TODO errors standard
+

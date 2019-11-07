@@ -38,8 +38,10 @@ type WhereStatement struct {
 func (ws WhereStatement) String() string {
 	// column1 = 1 AND column2 = 2
 	var str = ws.Condition
+	var valueStr string
 	for _, v := range ws.Values {
-		str = strings.Replace(str, "?", fmt.Sprintf("'%v'", v), 1)
+		valueStr = toQuotedStr(v)
+		str = strings.Replace(str, "?", valueStr, 1)
 	}
 	return str
 }

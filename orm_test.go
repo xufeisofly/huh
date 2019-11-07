@@ -260,6 +260,12 @@ func TestEverything(t *testing.T) {
 	if user.Email != "" || user.ID != 8 {
 		t.Errorf("[select error] user email expected: %s, actual: %s; user id expected: %d, actual: %d", "", user.Email, 8, user.ID)
 	}
+
+	users = []User{}
+	o.Where("id IN ?", []interface{}{8, 9}).Do(ctx, &users)
+	if len(users) != 2 {
+		t.Errorf("[where in error] users length should be 2")
+	}
 }
 
 func TestMain(m *testing.M) {

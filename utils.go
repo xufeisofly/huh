@@ -1,6 +1,7 @@
 package huh
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
@@ -74,4 +75,26 @@ func cloneInterface(in interface{}) interface{} {
 
 	inCopy := in
 	return inCopy
+}
+
+// toQuotedStr quoted value for raw sql
+// for example:
+// Trump to 'Trump', 8 to 8, []interface{}{1, "a"} to (1, 'a')
+func toQuotedStr(v interface{}) string {
+	var ret string
+
+	if reflect.ValueOf(v).Kind() == reflect.String {
+		ret = fmt.Sprintf("'%v'", v)
+	} else if reflect.ValueOf(v).Kind() == reflect.Slice {
+		var valueSlice []string
+
+		for _, item := range v.([]interface{}) {
+			valueSlice = append(valueSlice, toQuotedStr(item))
+		}
+
+		ret = fmt.Sprintf("(%v)", strings.Join(valueSlice, ","))
+	} else {
+		ret = fmt.Sprintf("%v", v)
+	}
+	return ret
 }

@@ -46,7 +46,7 @@
    o.Where("Name = ?", "Trump").Do(ctx, &users)
    o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
    o.Where("Name = ?", "Trump").Order("id desc").Do(ctx, &users)
-   o.Where("Name", []string{"Trump", "Obama"}).First().Do(ctx, &user)
+   o.Where("Name IN ?", []inteface{}{"Trump", "Obama"}).First().Do(ctx, &user)
 
    o.Select("name", "id").Get(1).Do(ctx, &user)
 

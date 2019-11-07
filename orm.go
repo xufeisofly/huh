@@ -19,12 +19,13 @@ type Orm struct {
 	// transaction
 	tx Tx
 
-	callbacks []Callback
-	model     *Model
-	operator  Operator
-	must      bool
-	statement SQLStatement
-	newValues map[string]interface{}
+	callbacks     []Callback
+	withCallbacks bool
+	model         *Model
+	operator      Operator
+	must          bool
+	statement     SQLStatement
+	newValues     map[string]interface{}
 	// whether implement the sql
 	do bool
 
@@ -36,8 +37,9 @@ type Orm struct {
 // New initialize a Orm struct
 func New() *Orm {
 	return &Orm{
-		masterDB: currentDB,
-		must:     false,
+		masterDB:      currentDB,
+		must:          false,
+		withCallbacks: true,
 	}
 }
 
@@ -229,6 +231,13 @@ func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 	return c, err
 }
 
+// WithoutCallBacks will not invoke hooks
+func (o *Orm) WithoutCallBacks() *Orm {
+	c := o.clone()
+	c.withCallbacks = false
+	return c
+}
+
 // Begin is the begin of transaction
 func (o *Orm) Begin() *Orm {
 	c := o.clone()
@@ -328,17 +337,18 @@ func (o *Orm) String() string {
 
 func (o *Orm) clone() *Orm {
 	return &Orm{
-		masterDB:  o.masterDB,
-		slaveDBs:  o.slaveDBs,
-		callbacks: o.callbacks,
-		model:     o.model,
-		tx:        o.tx,
-		operator:  o.operator,
-		must:      o.must,
-		statement: o.statement,
-		newValues: o.newValues,
-		scope:     o.scope,
-		result:    o.result,
-		do:        o.do,
+		masterDB:      o.masterDB,
+		slaveDBs:      o.slaveDBs,
+		callbacks:     o.callbacks,
+		withCallbacks: o.withCallbacks,
+		model:         o.model,
+		tx:            o.tx,
+		operator:      o.operator,
+		must:          o.must,
+		statement:     o.statement,
+		newValues:     o.newValues,
+		scope:         o.scope,
+		result:        o.result,
+		do:            o.do,
 	}
 }

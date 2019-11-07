@@ -26,7 +26,7 @@
    o.Update("ID", 2, "Name", "Obama").Do(ctx, &user)
    o.Update(map[string]interface{}{"ID": 2, "Name": "Obama"}).Do(ctx, &user)
    o.Where("ID < ?", 3).Update("name", "Obama").Do(ctx, User{})
-   o.MustUpdate(ctx, &user, "ID", 2, "Name": "Obama")
+   o.MustUpdate("ID", 2, "Name": "Obama").Do(ctx, &user)
 
    // no validation, no callbacks
    o.Update("ID", 2, "Name": "Obama").WithoutCallBacks().Do(ctx, &user)

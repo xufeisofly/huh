@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -148,10 +149,8 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
 
-	// Where("name", "sofly") => Where("name = ?", "sofly")
-	if len(values) == 1 && !strings.Contains(sqlStatement, "?") {
-		sqlStatement += " = ?"
-	}
+	sqlStatement, values = c.parseWhereArgs(sqlStatement, values)
+
 	// default OperatorSelect
 	c.operator = OperatorSelect
 	c.scope.WSs = append(
@@ -159,6 +158,21 @@ func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 		WhereStatement{Condition: sqlStatement, Values: values},
 	)
 	return c
+}
+
+func (o *Orm) parseWhereArgs(sqlStatement string, values []interface{}) (string, []interface{}) {
+	// Where("name", "sofly") => Where("name = ?", "sofly")
+	if len(values) == 1 && !strings.Contains(sqlStatement, "?") {
+		sqlStatement += " = ?"
+	}
+
+	for _, value := range values {
+		reflectValue := reflect.ValueOf(value)
+		if reflectValue.Kind() == reflect.Slice {
+
+		}
+	}
+	return sqlStatement, values
 }
 
 func (o *Orm) First() *Orm {

@@ -46,7 +46,7 @@
    o.Where("Name = ?", "Trump").Do(ctx, &users)
    o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
    o.Where("Name = ?", "Trump").Order("id desc").Do(ctx, &users)
-   o.Where("Name", []string{"Trump", "Obama"}).First().Do(ctx, &user)
+   o.Where("Name IN ?", []inteface{}{"Trump", "Obama"}).First().Do(ctx, &user)
 
    o.Select("name", "id").Get(1).Do(ctx, &user)
 
@@ -89,10 +89,10 @@
 **** DONE destroy
 **** DONE transaction
 **** DONE select
-**** TODO group by
+**** TODO errors standard
 **** TODO master and slave DB
 **** TODO stability in various conditions
 **** TODO code enhancement
 **** TODO annotation
 **** TODO syncMutex
-**** TODO errors standard
+

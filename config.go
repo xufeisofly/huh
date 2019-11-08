@@ -2,6 +2,7 @@ package huh
 
 import (
 	"database/sql"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,6 +18,18 @@ var currentDB *huhDB
 type DBConfig struct {
 	Master string
 	Slaves []string
+}
+
+func SetConnMaxLifetime(d time.Duration) {
+	currentDB.SetConnMaxLifetime(d)
+}
+
+func SetMaxOpenConns(i int) {
+	currentDB.SetMaxOpenConns(i)
+}
+
+func SetMaxIdleConns(i int) {
+	currentDB.SetMaxIdleConns(i)
 }
 
 // Config establish a DB connection

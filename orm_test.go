@@ -37,6 +37,9 @@ func setup() {
 	huh.Config("mysql", huh.DBConfig{
 		Master: "norris@(127.0.0.1:3306)/mysite?charset=utf8",
 	})
+	huh.SetMaxOpenConns(5)
+	huh.SetMaxIdleConns(2)
+	huh.SetConnMaxLifetime(time.Second)
 }
 
 func tearDown() {
@@ -272,6 +275,34 @@ func TestEverything(t *testing.T) {
 	o.Where("id", 9).Or("id", 8).Do(ctx, &users)
 	if len(users) != 2 {
 		t.Errorf("[where or error] users should be 2")
+	}
+}
+
+func BenchmarkSelect(b *testing.B) {
+	var users []User
+	for i := 0; i < b.N; i++ {
+		huh.New().Where("id", 9).Or("id", 8).Of(huh.Context(), &users)
+	}
+}
+
+func BenchmarkCreate(b *testing.B) {
+	var user = User{}
+	for i := 0; i < b.N; i++ {
+		huh.New().Create().Of(huh.Context(), &user)
+	}
+}
+
+func BenchmarkUpdate(b *testing.B) {
+	var user = User{ID: 1}
+	for i := 0; i < b.N; i++ {
+		huh.New().Update().Of(huh.Context(), &user)
+	}
+}
+
+func BenchmarkDestroy(b *testing.B) {
+	var user = User{ID: 1}
+	for i := 0; i < b.N; i++ {
+		huh.New().Destroy().Of(huh.Context(), &user)
 	}
 }
 

@@ -275,6 +275,34 @@ func TestEverything(t *testing.T) {
 	}
 }
 
+func BenchmarkSelect(b *testing.B) {
+	var users []User
+	for i := 0; i < b.N; i++ {
+		huh.New().Where("id", 9).Or("id", 8).Of(huh.Context(), &users)
+	}
+}
+
+func BenchmarkCreate(b *testing.B) {
+	var user = User{}
+	for i := 0; i < b.N; i++ {
+		huh.New().Create().Of(huh.Context(), &user)
+	}
+}
+
+func BenchmarkUpdate(b *testing.B) {
+	var user = User{ID: 1}
+	for i := 0; i < b.N; i++ {
+		huh.New().Update().Of(huh.Context(), &user)
+	}
+}
+
+func BenchmarkDestroy(b *testing.B) {
+	var user = User{ID: 1}
+	for i := 0; i < b.N; i++ {
+		huh.New().Destroy().Of(huh.Context(), &user)
+	}
+}
+
 func TestMain(m *testing.M) {
 	setup()
 	defer tearDown()

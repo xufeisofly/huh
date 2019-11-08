@@ -33,6 +33,7 @@ type WhereStatement struct {
 	ByPK      bool
 	Condition string
 	Values    []interface{}
+	isOr      bool
 }
 
 func (ws WhereStatement) String() string {

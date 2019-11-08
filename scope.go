@@ -1,7 +1,5 @@
 package huh
 
-import "strings"
-
 type Scope struct {
 	WSs    []WhereStatement
 	Cols   []string
@@ -10,10 +8,18 @@ type Scope struct {
 	Order  string
 }
 
+const AND = " AND "
+const OR = " OR "
+
 func (s *Scope) parseWhereStatement() WhereStatement {
+	type condition struct {
+		conStr string
+		isOr   bool
+	}
 	var byPK bool
-	var conStrs []string
+	var conditions []condition
 	var values []interface{}
+	var joinedCon, joinedStr string
 
 	if len(s.WSs) == 1 {
 		byPK = s.WSs[0].ByPK
@@ -22,13 +28,27 @@ func (s *Scope) parseWhereStatement() WhereStatement {
 	}
 
 	for _, ws := range s.WSs {
-		conStrs = append(conStrs, ws.Condition)
+		conditions = append(conditions, condition{conStr: ws.Condition, isOr: ws.isOr})
 		values = append(values, ws.Values...)
+	}
+
+	// join ws.Conditions with AND or OR
+	for i, condition := range conditions {
+		if i == 0 {
+			joinedCon = condition.conStr
+		} else {
+			if condition.isOr {
+				joinedStr = OR
+			} else {
+				joinedStr = AND
+			}
+			joinedCon += joinedStr + condition.conStr
+		}
 	}
 
 	return WhereStatement{
 		ByPK:      byPK,
-		Condition: strings.Join(conStrs, " AND "),
+		Condition: joinedCon,
 		Values:    values,
 	}
 }

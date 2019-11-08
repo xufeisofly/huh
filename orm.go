@@ -150,15 +150,40 @@ func (o *Orm) getBy(arg map[string]interface{}) *Orm {
 // Where get multiple instances by raw sql
 func (o *Orm) Where(sqlStatement string, values ...interface{}) *Orm {
 	c := o.clone()
+	c.where(sqlStatement, false, values...)
+	return c
+}
 
-	sqlStatement, values = c.parseWhereArgs(sqlStatement, values)
+func (o *Orm) where(sqlStatement string, isOr bool, values ...interface{}) *Orm {
+	sqlStatement, values = o.parseWhereArgs(sqlStatement, values)
 
-	// default OperatorSelect
-	c.operator = OperatorSelect
-	c.scope.WSs = append(
-		c.scope.WSs,
-		WhereStatement{Condition: sqlStatement, Values: values},
+	o.operator = OperatorSelect
+	o.scope.WSs = append(
+		o.scope.WSs,
+		WhereStatement{Condition: sqlStatement, Values: values, isOr: isOr},
 	)
+	return o
+}
+
+// And is AND relation between where statement
+// alias of Where func when a Where func has already been used
+func (o *Orm) And(sqlStatement string, values ...interface{}) *Orm {
+	c := o.clone()
+	if len(c.scope.WSs) == 0 {
+		panic("First where statement not found")
+	}
+	c.where(sqlStatement, false, values...)
+	return c
+}
+
+// Or is OR relation between where statement
+// alias of Where func when a Where func has already been used
+func (o *Orm) Or(sqlStatement string, values ...interface{}) *Orm {
+	c := o.clone()
+	if len(c.scope.WSs) == 0 {
+		panic("First where statement not found")
+	}
+	c.where(sqlStatement, true, values...)
 	return c
 }
 

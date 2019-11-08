@@ -249,7 +249,7 @@ func TestEverything(t *testing.T) {
 
 	// test multi where
 	users = []User{}
-	o.Where("email", "update3@huh.com").Where("id > ?", 8).Do(ctx, &users)
+	o.Where("email", "update3@huh.com").And("id > ?", 8).Do(ctx, &users)
 	if len(users) != 1 {
 		t.Errorf("[multi where error] users should be 1")
 	}
@@ -265,6 +265,13 @@ func TestEverything(t *testing.T) {
 	o.Where("id IN ?", []interface{}{8, 9}).Do(ctx, &users)
 	if len(users) != 2 {
 		t.Errorf("[where in error] users length should be 2")
+	}
+
+	// test where or
+	users = []User{}
+	o.Where("id", 9).Or("id", 8).Do(ctx, &users)
+	if len(users) != 2 {
+		t.Errorf("[where or error] users should be 2")
 	}
 }
 

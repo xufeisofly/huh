@@ -18,14 +18,18 @@ var currentDB *huhDB
 type DBConfig struct {
 	Master string
 	Slaves []string
-	Option DBOption
 }
 
-// DBOption db options
-type DBOption struct {
-	MaxIdleConns    int
-	MaxOpenConns    int
-	ConnMaxLifetime time.Duration
+func SetConnMaxLifetime(d time.Duration) {
+	currentDB.SetConnMaxLifetime(d)
+}
+
+func SetMaxOpenConns(i int) {
+	currentDB.SetMaxOpenConns(i)
+}
+
+func SetMaxIdleConns(i int) {
+	currentDB.SetMaxIdleConns(i)
 }
 
 // Config establish a DB connection
@@ -33,17 +37,6 @@ func Config(dialect string, dbConfig DBConfig) {
 	if dialect == "mysql" {
 		db, err := sql.Open("mysql", dbConfig.Master)
 		checkError(err)
-
-		// set sql.DB options
-		if &dbConfig.Option.ConnMaxLifetime != nil {
-			db.SetConnMaxLifetime(dbConfig.Option.ConnMaxLifetime)
-		}
-		if &dbConfig.Option.MaxOpenConns != nil {
-			db.SetMaxOpenConns(dbConfig.Option.MaxOpenConns)
-		}
-		if &dbConfig.Option.MaxIdleConns != nil {
-			db.SetMaxIdleConns(dbConfig.Option.MaxIdleConns)
-		}
 
 		currentDB = &huhDB{*db}
 		return

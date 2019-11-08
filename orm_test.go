@@ -37,6 +37,9 @@ func setup() {
 	huh.Config("mysql", huh.DBConfig{
 		Master: "norris@(127.0.0.1:3306)/mysite?charset=utf8",
 	})
+	huh.SetMaxOpenConns(5)
+	huh.SetMaxIdleConns(2)
+	huh.SetConnMaxLifetime(time.Second)
 }
 
 func tearDown() {

@@ -8,6 +8,10 @@
 	   },
    })
 
+   huh.SetMaxOpenConns(5)
+   huh.SetMaxIdleConns(2)
+   huh.SetConnMaxLifetime(time.Second)
+
    user := User{ID: 1, Name: "Trump"}
    ctx := context.TODO()
 

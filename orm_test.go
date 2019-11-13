@@ -3,8 +3,8 @@ package huh_test
 import (
 	"os"
 	"testing"
-	"time"
 
+	"github.com/xufeisofly/huh/testdata"
 	model "github.com/xufeisofly/huh/testdata/models"
 
 	"github.com/xufeisofly/huh"
@@ -14,37 +14,15 @@ func setup() {
 	huh.Config("mysql", huh.DBConfig{
 		Master: "norris@(127.0.0.1:3306)/mysite?charset=utf8",
 	})
-	huh.SetMaxOpenConns(5)
-	huh.SetMaxIdleConns(2)
-	huh.SetConnMaxLifetime(time.Second)
 }
 
 func tearDown() {
 	huh.Close()
 }
 
-func createTable() {
-	o := huh.New()
-	rawSQL := `CREATE TABLE users (
-id int(11) NOT NULL AUTO_INCREMENT,
-email varchar(255) NOT NULL,
-created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-PRIMARY KEY (id)
-)`
-	o.Exec(rawSQL)
-}
-
-func dropTable() {
-	o := huh.New()
-	rawSQL := `DROP TABLE users`
-	o.Exec(rawSQL)
-}
-
 func TestEverything(t *testing.T) {
-	dropTable()
-	createTable()
-	// defer dropTable()
+	testdata.PrepareTables()
+	defer testdata.CleanUpTables()
 
 	o := huh.New()
 	ctx := huh.Context()
@@ -54,7 +32,7 @@ func TestEverything(t *testing.T) {
 	var receivers []model.User
 
 	// test create raw sql
-	c, _ := o.Create().Of(ctx, &user)
+	c, _ := o.Create().WithCallbacks().Of(ctx, &user)
 	sqlStr := c.String()
 	if sqlStr != "INSERT INTO users (email,id) VALUES ('update3@huh.com','1')" {
 		t.Errorf("sqlStr actual: %s", sqlStr)
@@ -62,7 +40,7 @@ func TestEverything(t *testing.T) {
 
 	user = model.User{Email: "test@huh.com", ID: 1}
 	// test normal create
-	o.Create().Do(ctx, &user)
+	o.Create().WithCallbacks().Do(ctx, &user)
 
 	receiver = model.User{}
 	o.Get(1).Do(ctx, &receiver)
@@ -74,7 +52,7 @@ func TestEverything(t *testing.T) {
 
 	// test create with hooks
 	user2 := model.User{ID: 2, Email: "test2@huh.com"}
-	if err := o.Create().Do(ctx, &user2); err == nil {
+	if err := o.Create().WithCallbacks().Do(ctx, &user2); err == nil {
 		t.Errorf("CreateBefore hook should have error")
 	}
 
@@ -85,7 +63,7 @@ func TestEverything(t *testing.T) {
 	}
 
 	// test update
-	o.Update("email", "update@huh.com").Do(ctx, &user)
+	o.Update("email", "update@huh.com").WithCallbacks().Do(ctx, &user)
 
 	receiver = model.User{}
 	o.Get(user.ID).Do(ctx, &receiver)
@@ -95,7 +73,7 @@ func TestEverything(t *testing.T) {
 
 	// test update_all with where
 	user4 := model.User{ID: 4, Email: "update@huh.com"}
-	o.Create().Do(ctx, &user4)
+	o.Create().WithCallbacks().Do(ctx, &user4)
 
 	receivers = []model.User{}
 	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
@@ -118,7 +96,7 @@ func TestEverything(t *testing.T) {
 		h.MustCreate().Do(ctx, &user)
 	})
 
-	o.Create().Do(ctx, &user3)
+	o.Create().WithCallbacks().Do(ctx, &user3)
 
 	o.Where("email = ?", "update3@huh.com").Do(ctx, &receivers)
 
@@ -209,14 +187,14 @@ func TestEverything(t *testing.T) {
 	user8 := model.User{ID: 8, Email: "test8@huh.com"}
 	user9 := model.User{ID: 9, Email: "test9@huh.com"}
 	o.Transaction(ctx, func(o *huh.Orm) {
-		o.Create().Do(ctx, &user8)
+		o.Create().WithCallbacks().Do(ctx, &user8)
 		// user2 cannot be created
 		o.Transaction(ctx, func(o *huh.Orm) {
-			o.MustCreate().Do(ctx, &user2)
+			o.MustCreate().WithCallbacks().Do(ctx, &user2)
 		})
 
 		o.Transaction(ctx, func(o *huh.Orm) {
-			o.MustCreate().Do(ctx, &user9)
+			o.MustCreate().WithCallbacks().Do(ctx, &user9)
 		})
 	})
 
@@ -252,6 +230,13 @@ func TestEverything(t *testing.T) {
 	o.Where("id", 9).Or("id", 8).Do(ctx, &users)
 	if len(users) != 2 {
 		t.Errorf("[where or error] users should be 2")
+	}
+}
+
+func BenchmarkOf(b *testing.B) {
+	var user model.User
+	for i := 0; i < b.N; i++ {
+		huh.New().Of(huh.Context(), &user)
 	}
 }
 

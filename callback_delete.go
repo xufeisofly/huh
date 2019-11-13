@@ -2,13 +2,13 @@ package huh
 
 import "context"
 
-var destroyCallback *Callback
+var DestroyCallback *Callback
 
 func init() {
-	destroyCallback = DefaultCallback.Destroy()
-	destroyCallback.processor.Register(BeforeDestroyHandler)
-	destroyCallback.processor.Register(DestroyHandler)
-	destroyCallback.processor.Register(AfterDestroyHandler)
+	DestroyCallback = DefaultCallback.Destroy()
+	DestroyCallback.Processor.Register(BeforeDestroyHandler)
+	DestroyCallback.Processor.Register(DestroyHandler)
+	DestroyCallback.Processor.Register(AfterDestroyHandler)
 }
 
 func BeforeDestroyHandler(ctx context.Context, o *Orm) (*Orm, error) {

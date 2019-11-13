@@ -34,22 +34,22 @@ func (o *Orm) CallMethod(methodName string) error {
 	return nil
 }
 
-func (o *Orm) callCallbacks(ctx context.Context) (*Orm, error) {
+func (o *Orm) CallCallbacks(ctx context.Context) (*Orm, error) {
 	var cb *Callback
 	switch o.operator {
 	case OperatorCreate:
-		cb = createCallback
+		cb = CreateCallback
 	case OperatorUpdate:
-		cb = updateCallback
+		cb = UpdateCallback
 	case OperatorSelect:
-		cb = selectCallback
+		cb = SelectCallback
 	case OperatorDelete:
-		cb = destroyCallback
+		cb = DestroyCallback
 	default:
 		return o, ErrInvalidOperator
 	}
 
-	o, err := cb.processor.Process(ctx, o)
+	o, err := cb.Processor.Process(ctx, o)
 	return o, err
 }
 
@@ -111,14 +111,14 @@ func (o *Orm) selectedColumns() []string {
 	return cols
 }
 
-// setSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)
-func (o *Orm) setSelectResult(results []map[string]string) error {
+// SetSelectResult assign the query result map to `&in` parameter of Do(ctx, &in)
+func (o *Orm) SetSelectResult(results []map[string]string, output interface{}) error {
 	// no results, return directly
 	if len(results) == 0 {
 		return nil
 	}
 
-	v := reflect.ValueOf(o.result)
+	v := reflect.ValueOf(output)
 
 	if v.Kind() != reflect.Ptr {
 		return fmt.Errorf("non-pointer type %v", v.Type())

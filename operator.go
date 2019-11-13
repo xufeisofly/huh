@@ -3,8 +3,8 @@ package huh
 type Operator int
 
 const (
-	OperatorCreate Operator = iota
+	OperatorSelect Operator = iota
+	OperatorCreate
 	OperatorUpdate
 	OperatorDelete
-	OperatorSelect
 )

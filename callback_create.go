@@ -1,16 +1,18 @@
 package huh
 
-import "context"
+import (
+	"context"
+)
 
-var createCallback *Callback
+var CreateCallback *Callback
 
 func init() {
-	createCallback = DefaultCallback.Create()
-	createCallback.processor.Register(BeforeCreateHandler)
-	createCallback.processor.Register(BeforeSaveHandler)
-	createCallback.processor.Register(CreateHandler)
-	createCallback.processor.Register(AfterSaveHandler)
-	createCallback.processor.Register(AfterCreateHandler)
+	CreateCallback = DefaultCallback.Create()
+	CreateCallback.Processor.Register(BeforeCreateHandler)
+	CreateCallback.Processor.Register(BeforeSaveHandler)
+	CreateCallback.Processor.Register(CreateHandler)
+	CreateCallback.Processor.Register(AfterSaveHandler)
+	CreateCallback.Processor.Register(AfterCreateHandler)
 }
 
 func BeforeCreateHandler(ctx context.Context, o *Orm) (*Orm, error) {

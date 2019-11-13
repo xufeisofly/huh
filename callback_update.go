@@ -2,15 +2,15 @@ package huh
 
 import "context"
 
-var updateCallback *Callback
+var UpdateCallback *Callback
 
 func init() {
-	updateCallback = DefaultCallback.Update()
-	updateCallback.processor.Register(BeforeUpdateHandler)
-	updateCallback.processor.Register(BeforeSaveHandler)
-	updateCallback.processor.Register(UpdateHandler)
-	updateCallback.processor.Register(AfterSaveHandler)
-	updateCallback.processor.Register(AfterUpdateHandler)
+	UpdateCallback = DefaultCallback.Update()
+	UpdateCallback.Processor.Register(BeforeUpdateHandler)
+	UpdateCallback.Processor.Register(BeforeSaveHandler)
+	UpdateCallback.Processor.Register(UpdateHandler)
+	UpdateCallback.Processor.Register(AfterSaveHandler)
+	UpdateCallback.Processor.Register(AfterUpdateHandler)
 }
 
 func BeforeUpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {

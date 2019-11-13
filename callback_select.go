@@ -5,11 +5,11 @@ import (
 	"reflect"
 )
 
-var selectCallback *Callback
+var SelectCallback *Callback
 
 func init() {
-	selectCallback = DefaultCallback.Select()
-	selectCallback.processor.Register(SelectHandler)
+	SelectCallback = DefaultCallback.Select()
+	SelectCallback.Processor.Register(SelectHandler)
 }
 
 func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
@@ -45,7 +45,7 @@ func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 		results = append(results, ret)
 	}
 
-	err := o.setSelectResult(results)
+	err := o.SetSelectResult(results, o.result)
 	return o, err
 }
 

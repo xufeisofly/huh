@@ -39,7 +39,7 @@ func New() *Orm {
 	return &Orm{
 		masterDB:      currentDB,
 		must:          false,
-		withCallbacks: true,
+		withCallbacks: false,
 	}
 }
 
@@ -250,16 +250,21 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 // Of parse the sql statement without calling the it
 func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 	c := o.clone()
+	c.SetResult(ctx, in)
 	c.result = in
 
-	c, err := c.callCallbacks(ctx)
+	c, err := c.CallCallbacks(ctx)
 	return c, err
 }
 
-// WithoutCallBacks will not invoke hooks
-func (o *Orm) WithoutCallBacks() *Orm {
+func (o *Orm) SetResult(ctx context.Context, in interface{}) {
+	o.result = in
+}
+
+// WithCallBacks will not invoke hooks
+func (o *Orm) WithCallbacks() *Orm {
 	c := o.clone()
-	c.withCallbacks = false
+	c.withCallbacks = true
 	return c
 }
 

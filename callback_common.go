@@ -40,13 +40,19 @@ func (cp *CommonCallbackProcessor) Register(handler CallbackHandler) {
 	cp.Handlers = append(cp.Handlers, handler)
 }
 
+func (cp *CommonCallbackProcessor) GetHandlers() []CallbackHandler {
+	return cp.Handlers
+}
+
 // Process calls the operation callback pipeline
 // every operation is actually a transaction
 // when error occurs in the callback pipeline, tx will roll back
 func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) (*Orm, error) {
-	o, _ = BeginTransactionHandler(ctx, o)
+	if o.withCallbacks {
+		o, _ = BeginTransactionHandler(ctx, o)
+	}
 
-	for _, handler := range cp.Handlers {
+	for _, handler := range cp.GetHandlers() {
 		// only mainHandlers when without callbacks
 		if !o.withCallbacks {
 			funcName := getFuncName(handler)
@@ -58,13 +64,18 @@ func (cp *CommonCallbackProcessor) Process(ctx context.Context, o *Orm) (*Orm, e
 		c, err := handler(ctx, o)
 		o = c
 		if err != nil {
-			o, _ = RollbackTransactionHandler(ctx, o)
+			if o.withCallbacks {
+				o, _ = RollbackTransactionHandler(ctx, o)
+			}
 			return o, err
 		}
 	}
 
-	o, err := CommitTransactionHandler(ctx, o)
-	return o, err
+	if o.withCallbacks {
+		o, err := CommitTransactionHandler(ctx, o)
+		return o, err
+	}
+	return o, nil
 }
 
 func getFuncName(handler CallbackHandler) string {

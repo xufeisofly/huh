@@ -251,7 +251,6 @@ func (o *Orm) Do(ctx context.Context, in interface{}) error {
 func (o *Orm) Of(ctx context.Context, in interface{}) (*Orm, error) {
 	c := o.clone()
 	c.SetResult(ctx, in)
-	c.result = in
 
 	c, err := c.CallCallbacks(ctx)
 	return c, err

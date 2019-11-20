@@ -15,8 +15,10 @@ func init() {
 func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 	var results []map[string]string
 
-	o.model = GetModel(o.result)
-	o.parseStatement()
+	o, err := o.ParseStatement()
+	if err != nil {
+		return o, err
+	}
 
 	if !o.do {
 		return o, nil
@@ -45,7 +47,7 @@ func SelectHandler(ctx context.Context, o *Orm) (*Orm, error) {
 		results = append(results, ret)
 	}
 
-	err := o.SetSelectResult(results, o.result)
+	err = o.SetSelectResult(results, o.result)
 	return o, err
 }
 

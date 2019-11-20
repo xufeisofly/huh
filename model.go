@@ -1,6 +1,7 @@
 package huh
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -17,7 +18,7 @@ type Model struct {
 }
 
 // GetModel get model info from `in`
-func GetModel(in interface{}) *Model {
+func GetModel(in interface{}) (*Model, error) {
 	var name string
 	var fields []*Field
 	var reflectValue reflect.Value
@@ -40,6 +41,9 @@ func GetModel(in interface{}) *Model {
 
 	// deal with slice, etc. o.Where(...).Do(ctx, &users)
 	if reflectValue.Kind() == reflect.Slice {
+		if !reflectValue.CanSet() {
+			return nil, fmt.Errorf("%w", ErrResultUnassignable)
+		}
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 1, 1))
 		itemValue := reflectValue.Index(0)
 
@@ -52,7 +56,9 @@ func GetModel(in interface{}) *Model {
 	}
 
 	name, err := getTableName(reflectValue, reflectType)
-	checkError(err)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
 	// get fields
 	for i := 0; i < reflectValue.NumField(); i++ {
 		isPrimaryKey = false
@@ -90,15 +96,13 @@ func GetModel(in interface{}) *Model {
 		fields = append(fields, field)
 	}
 
-	checkError(err)
-
 	return &Model{
 		TableName:         name,
 		Fields:            fields,
 		Value:             reflect.ValueOf(in),
 		PrimaryField:      primaryField,
 		ColToFieldNameMap: colToFieldNameMap,
-	}
+	}, nil
 }
 
 func getPrimaryKey(in interface{}) (string, error) {

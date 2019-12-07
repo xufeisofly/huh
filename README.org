@@ -1,9 +1,22 @@
 ** API
 
+#+BEGIN_SRC go
+huh.Config("mysql", huh.DBConfig{
+    Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	Slaves: []string{
+    	"slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	},
+})
+
+huh.SetMaxOpenConns(5)
+huh.SetMaxIdleConns(2)
+huh.SetConnMaxLifetime(time.Second)
+#+END_SRC
+
    #+BEGIN_SRC go
    huh.Config("mysql", huh.DBConfig{
        Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
-	   Slaves: []string{
+       Slaves: []string{
 	       "slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
 	   },
    })

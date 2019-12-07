@@ -1,6 +1,8 @@
 package huh
 
-import "context"
+import (
+	"context"
+)
 
 var DestroyCallback *Callback
 
@@ -17,15 +19,20 @@ func BeforeDestroyHandler(ctx context.Context, o *Orm) (*Orm, error) {
 }
 
 func DestroyHandler(ctx context.Context, o *Orm) (*Orm, error) {
-	o.model = GetModel(o.result)
-	o.parseStatement()
+	o, err := o.ParseStatement()
+	if err != nil {
+		return o, err
+	}
 
 	if !o.do {
 		return o, nil
 	}
 
-	err := o.Exec(o.String())
-	return o, err
+	err = o.Exec(o.String())
+	if err != nil {
+		return o, ErrInvalidSQL
+	}
+	return o, nil
 }
 
 func AfterDestroyHandler(ctx context.Context, o *Orm) (*Orm, error) {

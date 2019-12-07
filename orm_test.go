@@ -33,6 +33,7 @@ func TestEverything(t *testing.T) {
 
 	// test create raw sql
 	c, _ := o.Create().WithCallbacks().Of(ctx, &user)
+
 	sqlStr := c.String()
 	if sqlStr != "INSERT INTO users (email,id) VALUES ('update3@huh.com','1')" {
 		t.Errorf("sqlStr actual: %s", sqlStr)

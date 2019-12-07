@@ -12,7 +12,7 @@ func TestGetModel(t *testing.T) {
 	var in model.User
 	var model *huh.Model
 
-	model = huh.GetModel(&in)
+	model, _ = huh.GetModel(&in)
 
 	if model.TableName != "users" {
 		t.Errorf("[GetModel] TableName expected: %s, actual: %s", "users", model.TableName)

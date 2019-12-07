@@ -2,6 +2,7 @@ package huh
 
 import (
 	"context"
+	"fmt"
 )
 
 var CreateCallback *Callback
@@ -21,15 +22,22 @@ func BeforeCreateHandler(ctx context.Context, o *Orm) (*Orm, error) {
 }
 
 func CreateHandler(ctx context.Context, o *Orm) (*Orm, error) {
-	o.model = GetModel(o.result)
+	model, err := GetModel(o.result)
+	if err != nil {
+		return o, fmt.Errorf("%w", err)
+	}
+	o.model = model
 	o.parseStatement()
 
 	if !o.do {
 		return o, nil
 	}
 
-	err := o.Exec(o.String())
-	return o, err
+	err = o.Exec(o.String())
+	if err != nil {
+		return o, ErrInvalidSQL
+	}
+	return o, nil
 }
 
 func AfterCreateHandler(ctx context.Context, o *Orm) (*Orm, error) {

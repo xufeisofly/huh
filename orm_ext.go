@@ -17,7 +17,17 @@ func (o *Orm) CallMethod(methodName string) error {
 
 	reflectValue := reflect.ValueOf(o.result)
 
-	if methodValue := reflectValue.MethodByName(methodName); methodValue.IsValid() {
+	methodValue := reflectValue.MethodByName(methodName)
+	// if model pointer has no method defined, check its value receiver
+	if !methodValue.IsValid() {
+		if reflect.TypeOf(o.result).Kind() == reflect.Struct {
+			return fmt.Errorf("%w", ErrNeedPtrParam)
+		}
+		reflectValue = reflectValue.Elem()
+		methodValue = reflectValue.MethodByName(methodName)
+	}
+
+	if methodValue.IsValid() {
 		switch methodValue.Interface().(type) {
 		case func(context.Context) error: // BeforeCreate
 			argsValue = []reflect.Value{reflect.ValueOf(ctx)}
@@ -46,11 +56,21 @@ func (o *Orm) CallCallbacks(ctx context.Context) (*Orm, error) {
 	case OperatorDelete:
 		cb = DestroyCallback
 	default:
-		return o, ErrInvalidOperator
+		return o, fmt.Errorf("%w", ErrInvalidOperator)
 	}
 
 	o, err := cb.Processor.Process(ctx, o)
 	return o, err
+}
+
+func (o *Orm) ParseStatement() (*Orm, error) {
+	model, err := GetModel(o.result)
+	if err != nil {
+		return o, fmt.Errorf("%w", err)
+	}
+	o.model = model
+	o.parseStatement()
+	return o, nil
 }
 
 func (o *Orm) parseStatement() {
@@ -134,7 +154,7 @@ func (o *Orm) SetSelectResult(results []map[string]string, output interface{}) e
 	} else if v.Kind() == reflect.Slice {
 		v.Set(reflect.MakeSlice(v.Type(), len(results), len(results)))
 		if !canAssign(v.Index(0)) {
-			return fmt.Errorf("can't assign non-struct to slice")
+			return fmt.Errorf("%w", ErrResultUnassignable)
 		}
 
 		for i, result := range results {
@@ -154,7 +174,7 @@ func (o *Orm) setOutputResult(output reflect.Value, data map[string]string) erro
 		f := output.FieldByName(fName)
 
 		if !f.IsValid() || !f.CanSet() {
-			return fmt.Errorf("result field can't be set")
+			return fmt.Errorf("%w", ErrUnchangable)
 		}
 
 		switch f.Kind() {
@@ -192,7 +212,7 @@ func (o *Orm) setOutputResult(output reflect.Value, data map[string]string) erro
 			}
 			f.Set(reflect.ValueOf(colTime))
 		default:
-			return fmt.Errorf("unknow field type %v", f.Kind())
+			return fmt.Errorf("%w", ErrUnknownFieldType)
 		}
 	}
 	return nil

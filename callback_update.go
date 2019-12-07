@@ -1,6 +1,8 @@
 package huh
 
-import "context"
+import (
+	"context"
+)
 
 var UpdateCallback *Callback
 
@@ -19,14 +21,19 @@ func BeforeUpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {
 }
 
 func UpdateHandler(ctx context.Context, o *Orm) (*Orm, error) {
-	o.model = GetModel(o.result)
-	o.parseStatement()
+	o, err := o.ParseStatement()
+	if err != nil {
+		return o, err
+	}
 
 	if !o.do {
 		return o, nil
 	}
 
-	err := o.Exec(o.String())
+	err = o.Exec(o.String())
+	if err != nil {
+		return o, ErrInvalidSQL
+	}
 	return o, err
 }
 

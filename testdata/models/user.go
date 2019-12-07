@@ -17,7 +17,7 @@ func (u *User) TableName() string {
 	return "users"
 }
 
-func (u *User) BeforeCreate(ctx context.Context) error {
+func (u User) BeforeCreate(ctx context.Context) error {
 	if u.ID == 2 {
 		return errors.New("before create error")
 	}

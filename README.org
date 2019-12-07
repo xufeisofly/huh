@@ -24,9 +24,9 @@ go get -u github.com/xufeisofly/huh
 
 #+BEGIN_SRC go
 huh.Config("mysql", huh.DBConfig{
-    Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
 	Slaves: []string{
-	    "slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+		"slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
 	},
 })
 #+END_SRC
@@ -85,7 +85,7 @@ huh.SetConnMaxLifetime(time.Second)
 
    // Callbacks
    func (u *User) BeforeCreate(ctx) error {
-       return nil
+	   return nil
    }
 
    // Raw SQL
@@ -94,15 +94,15 @@ huh.SetConnMaxLifetime(time.Second)
 
    // transaction
    o.Transaction(ctx, func(o *huh.Orm){
-       o.MustCreate().Do(ctx, &user2)
-       o.MustCreate().Do(ctx, &user)
+	   o.MustCreate().Do(ctx, &user2)
+	   o.MustCreate().Do(ctx, &user)
    })
 
    o.Transaction(ctx, func(o2 *huh.Orm){
-       o2.MustCreate().Do(ctx, &user)
+	   o2.MustCreate().Do(ctx, &user)
 
 	   o2.Transaction(ctx, func(o3 *huh.Orm){
-	       o3.MustCreate().Do(ctx, &user2)  // panic
+		   o3.MustCreate().Do(ctx, &user2)	// panic
 	   })
    })
    // => only create user

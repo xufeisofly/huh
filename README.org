@@ -122,8 +122,8 @@ huh.New().Where("email = ?", "sofly@huh.com").Where("created_at > ?", "2019-01-0
 	
 #+BEGIN_SRC go
 huh.New().Where(map[string]interface{}{
-	"email = ?": "sofly@huh.com",
-	"created_at > ?", "2019-01-01 00:00:00"
+	"email = ?":      "sofly@huh.com",
+	"created_at > ?": "2019-01-01 00:00:00"
 }).Do(ctx, &users)
 #+END_SRC
   

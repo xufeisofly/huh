@@ -1,102 +1,254 @@
-** API
+* HUH
 
-   #+BEGIN_SRC go
-   huh.Config("mysql", huh.DBConfig{
-           Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
-		   Slaves: []string{
-	               "slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
-		   },
-   })
+  Huh? It is an light MySQL ORM library for Golang.
+  
+** Overview
+   - Basic CRUD support
+   - Callback hooks (BeforeCreate, AfterCreate etc.)
+   - Transactions and Embeded transactions
+   - SQL Builder
+   - TODO Master & Slave DB seperation
+   - TODO Multiple dialect support
 
-   huh.SetMaxOpenConns(5)
-   huh.SetMaxIdleConns(2)
-   huh.SetConnMaxLifetime(time.Second)
+** Getting Started
 
-   user := User{ID: 1, Name: "Trump"}
-   ctx := context.TODO()
+*** Download
 
-   
-   o = huh.New()
+#+BEGIN_SRC shell
+go get -u github.com/xufeisofly/huh
+#+END_SRC
 
-   // Create
-   o.Create().Do(ctx, &user)
-   o.MustCreate().Do(ctx, &user)
+*** Initialization & Config
 
-   // Save
-   user.Name = "Obama"
-   o.Save().Do(ctx, &user)
+	Config a database connection.
 
-   // Update with validation and callbacks
-   o.Update("ID", 2, "Name", "Obama").Do(ctx, &user)
-   o.Update(map[string]interface{}{"ID": 2, "Name": "Obama"}).Do(ctx, &user)
-   o.Where("ID < ?", 3).Update("name", "Obama").Do(ctx, User{})
-   o.MustUpdate("ID", 2, "Name": "Obama").Do(ctx, &user)
+#+BEGIN_SRC go
+huh.Config("mysql", huh.DBConfig{
+	Master: "master:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	Slaves: []string{
+		"slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
+	},
+})
+#+END_SRC
 
-   // no validation, no callbacks
-   o.Update("ID", 2, "Name": "Obama").WithoutCallBacks().Do(ctx, &user)
-   o.Update("ID", 2, "Name": "Obama").Do(ctx, User{})
+	Set max connections, idle connections and connection life time.
 
-   // Delete
-   o.Destroy().Do(ctx, &user)
-   o.MustDestroy().Do(ctx, &user)
-   o.Destroy().Do(ctx, User{})
-   o.Where("Name = ", "Trump").Destroy().Do(ctx, User{})
+#+BEGIN_SRC go
+huh.SetMaxOpenConns(5)
+huh.SetMaxIdleConns(2)
+huh.SetConnMaxLifetime(time.Second)
+#+END_SRC
 
-   // Query
-   o.Get(1).Do(ctx, &user)
-   o.GetBy("Name", "Trump", "ID", 1).Do(ctx, &user)
+*** Define a model
 
-   users := []User{}
-   o.Where("Name = ?", "Trump").Do(ctx, &users)
-   o.Where("Name = ?", "Trump").Offset(0).Limit(10).Do(ctx, &users)
-   o.Where("Name = ?", "Trump").Order("id desc").Do(ctx, &users)
-   o.Where("Name IN ?", []inteface{}{"Trump", "Obama"}).First().Do(ctx, &user)
+#+BEGIN_SRC go
+type User struct {
+	ID		  uint32 `huh:"pk"`
+	Email	  string
+	CreatedAt time.Time `huh:"readonly"`
+	UpdatedAt time.Time `huh:"readonly"`
+}
 
-   o.Select("name", "id").Get(1).Do(ctx, &user)
+func (u *User) TableName() string {
+	return "users"
+}
+#+END_SRC
 
-   // Callbacks
-   func (u *User) BeforeCreate(ctx) error {
-       return nil
-   }
+*** Create a user
 
-   // Raw SQL
-   fmt.Println(o.Create().Of(ctx, &user))
-   # => "INSERT INTO users (`users.id`,`users.email`) VALUES (1,'test@huh.com')"
+#+BEGIN_SRC go
+user := User{ID: 1, Email: "create@huh.com"}
+huh.New().Create().Do(ctx, &user)
+#+END_SRC
 
-   // transaction
-   o.Transaction(ctx, func(o *huh.Orm){
-       o.MustCreate().Do(ctx, &user2)
-       o.MustCreate().Do(ctx, &user)
-   })
+	Must create with error raise
 
-   o.Transaction(ctx, func(o2 *huh.Orm){
-       o2.MustCreate().Do(ctx, &user)
+#+BEGIN_SRC go
+huh.New().MustCreate().Do(ctx, &user)
+#+END_SRC
+	
+*** Update a user
 
-	   o2.Transaction(ctx, func(o3 *huh.Orm){
-	       o3.MustCreate().Do(ctx, &user2)  // panic
-	   })
-   })
-   // => only create user
-   
-   #+END_SRC
+	Update id = 1 user's email to update@huh.com.
+
+#+BEGIN_SRC go
+user := User{ID: 1}
+huh.New().Update("email", "update@huh.com").Do(ctx, &user)
+#+END_SRC
+
+	Update several user's columns.
+
+#+BEGIN_SRC go
+user := User{ID: 1}
+huh.New().Update("col1", "newValue1", "col2", "newValue2").Do(ctx, &user)
+#+END_SRC
+
+	Bulk update users
+
+#+BEGIN_SRC go
+huh.New().Where("email = ?", "sofly@huh.com").Update("email", "update@huh.com").Do(ctx, User{})
+#+END_SRC
+
+	Must update with error raise
+
+#+BEGIN_SRC go
+huh.New().MustUpdate("col1", "newValue1", "col2", "newValue2").Do(ctx, &user)
+#+END_SRC
+
+*** Find a user
+
+	Find by Primary Key
+
+#+BEGIN_SRC go
+user = User{}
+huh.New().Get(1).Do(ctx, &user)
+#+END_SRC
+
+	Find one record by column equality
+
+#+BEGIN_SRC go
+user = User{}
+huh.New().GetBy("email", "sofly@huh.com").Do(ctx, &user)
+#+END_SRC
+
+	Find records by where condition
+
+#+BEGIN_SRC go
+users = []User{}
+huh.New().Where("email = ?", "sofly@huh.com").Where("created_at > ?", "2019-01-01 00:00:00").Do(ctx, &users)
+#+END_SRC
+
+	Use map instead of multiple where
+	
+#+BEGIN_SRC go
+huh.New().Where(map[string]interface{}{
+	"email = ?": "sofly@huh.com",
+	"created_at > ?", "2019-01-01 00:00:00"
+}).Do(ctx, &users)
+#+END_SRC
+  
+	Use And
+
+#+BEGIN_SRC go
+huh.New().Where("email = ?", "sofly@huh.com").And("created_at > ?", "2019-01-01 00:00:00").Do(ctx, &users)
+#+END_SRC
+
+	Use Or
+
+#+BEGIN_SRC go
+huh.New().Where("email = ?", "sofly@huh.com").Or("created_at > ?", "2019-01-01 00:00:00").Do(ctx, &users)
+#+END_SRC
+
+*** Destroy a user
+
+#+BEGIN_SRC go
+huh.New().Get(1).Do(ctx, &user)
+huh.New().Destroy().Do(ctx, &user)
+#+END_SRC
+
+	Bulk destroy users
+
+#+BEGIN_SRC go
+huh.New().Where("email = ?", "sofly@huh.com").Destroy().Do(ctx, model.User{})
+#+END_SRC
+
+	Must destroy with error raise
+
+#+BEGIN_SRC go
+huh.New().MustDestroy().Do(ctx, &user)
+#+END_SRC
+
+*** Others 
+
+	Selected fields
+
+#+BEGIN_SRC go
+huh.New().Select("id").Where("email = ?", "sofly@huh.com").Do(ctx, &users)
+#+END_SRC
+
+	Offset & limit
+
+#+BEGIN_SRC go
+o.Where("email = ?", "sofly@huh.com").Limit(1).Offset(1).Do(ctx, &users)
+#+END_SRC
+
+	Order by
+
+#+BEGIN_SRC go
+o.Where("email = ?", "sofly@huh.com").Order("id desc").Do(ctx, &users)
+#+END_SRC
+
+*** Transaction
+
+	normal transaction
+
+#+BEGIN_SRC go
+huh.New().Transaction(ctx, func(o *huh.Orm) {
+	o.Create().Do(ctx, &user)
+})
+#+END_SRC
+
+	nested transaction
+
+#+BEGIN_SRC go
+huh.New().Transaction(ctx, func(o *huh.Orm) {
+	o.MustCreate().Do(ctx, &user)
+
+	o.Transaction(ctx, func(o *huh.Orm) {
+		o.MustCreate().Do(ctx, &user2)
+	})
+})
+#+END_SRC
+
+*** Callbacks
+
+	Define Callbacks
+
+#+BEGIN_SRC go
+type User struct {
+	ID        uint32 `huh:"pk"`
+	Email     string
+	CreatedAt time.Time `huh:"readonly"`
+	UpdatedAt time.Time `huh:"readonly"`
+}
+
+func (u *User) TableName() string {
+	return "users"
+}
+
+func (u User) BeforeCreate(ctx context.Context) error {
+	if u.ID == 1 {
+		return errors.New("before create error")
+	}
+	return nil
+}
+
+func (u *User) BeforeSave(ctx context.Context) error {
+	u.Email = "update3@huh.com"
+	return nil
+}
+#+END_SRC
+
+	With callbacks
+
+#+BEGIN_SRC go
+huh.New().Create().WithCallbacks().Do(ctx, &user)
+#+END_SRC
+
+*** SQL Builder
+
+#+BEGIN_SRC go
+user := User{ID: 1, Email: "sofly@huh.com"}
+sql, _ := huh.New().Create().Of(ctx, &user)
+
+fmt.Println(sql)
+# => INSERT INTO `users` (`id`, `email`, `created_at`, `updated_at`) VALUES (1, "sofly@huh.com", "2019-01-01 00:00:00", "2019-01-01 00:00:00")
+#+END_SRC
 
 ** TODOs
 
-**** DONE create
-**** DONE create callback
-**** DONE update updatewithwhere
-**** DONE get getby
-**** DONE get should match col name order, not select *
-**** DONE offset limit order
-**** DONE created_at updated_at
-**** DONE nested transaction
-**** DONE destroy
-**** DONE transaction
-**** DONE select
-**** TODO errors standard
-**** TODO master and slave DB
-**** TODO stability in various conditions
-**** TODO code enhancement
-**** TODO annotation
-**** TODO syncMutex
-
+****** TODO error handlers
+****** TODO master and slave support
+****** TODO stability
+****** TODO connection pool
+****** TODO redis query cache

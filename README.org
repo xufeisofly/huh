@@ -43,14 +43,14 @@ huh.SetConnMaxLifetime(time.Second)
 
 #+BEGIN_SRC go
 type User struct {
-    ID        uint32 `huh:"pk"`
-	Email     string
+	ID		  uint32 `huh:"pk"`
+	Email	  string
 	CreatedAt time.Time `huh:"readonly"`
 	UpdatedAt time.Time `huh:"readonly"`
 }
 
 func (u *User) TableName() string {
-    return "users"
+	return "users"
 }
 #+END_SRC
 
@@ -70,7 +70,7 @@ user := User{ID: 1}
 huh.New().Update("email", "update@huh.com").Do(ctx, &user)
 #+END_SRC
 
-    Update several user's columns.
+	Update several user's columns.
 
 #+BEGIN_SRC go
 user := User{ID: 1}

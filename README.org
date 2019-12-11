@@ -43,8 +43,8 @@ huh.SetConnMaxLifetime(time.Second)
 
 #+BEGIN_SRC go
 type User struct {
-	ID		  uint32 `huh:"pk"`
-	Email	  string
+	ID        uint32 `huh:"pk"`
+	Email     string
 	CreatedAt time.Time `huh:"readonly"`
 	UpdatedAt time.Time `huh:"readonly"`
 }

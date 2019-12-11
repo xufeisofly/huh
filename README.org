@@ -1,6 +1,6 @@
 * HUH
 
-  An light MySQL ORM library for Golang.
+  Huh? It is an light MySQL ORM library for Golang.
   
 ** Overview
    - Basic CRUD support
@@ -37,6 +37,50 @@ huh.Config("mysql", huh.DBConfig{
 huh.SetMaxOpenConns(5)
 huh.SetMaxIdleConns(2)
 huh.SetConnMaxLifetime(time.Second)
+#+END_SRC
+
+*** Define a model
+
+#+BEGIN_SRC go
+type User struct {
+    ID        uint32 `huh:"pk"`
+	Email     string
+	CreatedAt time.Time `huh:"readonly"`
+	UpdatedAt time.Time `huh:"readonly"`
+}
+
+func (u *User) TableName() string {
+    return "users"
+}
+#+END_SRC
+
+*** Create a user
+
+#+BEGIN_SRC go
+user := User{ID: 1, Email: "create@huh.com"}
+huh.New().Create().Do(ctx, &user)
+#+END_SRC
+	
+*** Update a user
+
+	Update id = 1 user's email to update@huh.com.
+
+#+BEGIN_SRC go
+user := User{ID: 1}
+huh.New().Update("email", "update@huh.com").Do(ctx, &user)
+#+END_SRC
+
+    Update several user's columns.
+
+#+BEGIN_SRC go
+user := User{ID: 1}
+huh.New().Update("col1", "newValue1", "col2", "newValue2").Do(ctx, &user)
+#+END_SRC
+
+*** Find a user
+
+#+BEGIN_SRC go
+
 #+END_SRC
 
 ** API

@@ -245,8 +245,10 @@ fmt.Println(sql)
 # => INSERT INTO `users` (`id`, `email`, `created_at`, `updated_at`) VALUES (1, "sofly@huh.com", "2019-01-01 00:00:00", "2019-01-01 00:00:00")
 #+END_SRC
 
-***** TODO error handlers
-***** TODO master and slave support
-***** TODO stability
-***** TODO connection pool
-***** TODO redis query cache
+** TODOs
+
+****** TODO error handlers
+****** TODO master and slave support
+****** TODO stability
+****** TODO connection pool
+****** TODO redis query cache

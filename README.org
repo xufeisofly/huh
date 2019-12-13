@@ -1,6 +1,6 @@
-* HUH
+* Huh?
 
-  Huh? It is an light MySQL ORM library for Golang.
+  A light weight MySQL ORM library for Golang.
   
 ** Overview
    - Basic CRUD support

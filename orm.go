@@ -50,12 +50,15 @@ func (o *Orm) MasterDB() *huhDB {
 // SlaveDB get by roundbin
 func (o *Orm) SlaveDB() *huhDB {
 	o.pool.incrSlaveIdx()
-	return o.pool.slaveDBs[pool.slaveIdx]
+	if len(o.pool.slaveDBs) != 0 {
+		return o.pool.slaveDBs[pool.slaveIdx]
+	}
+	return nil
 }
 
 // ExecutorDB select master or slave DB by SQL type
 func (o *Orm) ExecutorDB() *huhDB {
-	if o.isSelect() {
+	if o.isSelect() && o.SlaveDB() != nil {
 		return o.SlaveDB()
 	}
 	return o.MasterDB()

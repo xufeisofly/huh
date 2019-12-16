@@ -14,8 +14,7 @@ import (
 
 // Orm is the base struct
 type Orm struct {
-	masterDB *huhDB
-	slaveDBs []*huhDB
+	pool Pool
 	// transaction
 	tx Tx
 
@@ -37,15 +36,32 @@ type Orm struct {
 // New initialize a Orm struct
 func New() *Orm {
 	return &Orm{
-		masterDB:      currentDB,
+		pool:          pool,
 		must:          false,
 		withCallbacks: false,
 	}
 }
 
-// Close current DB connection
-func (o *Orm) Close() error {
-	return o.masterDB.Close()
+// MasterDB get
+func (o *Orm) MasterDB() *huhDB {
+	return o.pool.masterDB
+}
+
+// SlaveDB get by roundbin
+func (o *Orm) SlaveDB() *huhDB {
+	o.pool.incrSlaveIdx()
+	if len(o.pool.slaveDBs) != 0 {
+		return o.pool.slaveDBs[pool.slaveIdx]
+	}
+	return nil
+}
+
+// ExecutorDB select master or slave DB by SQL type
+func (o *Orm) ExecutorDB() *huhDB {
+	if o.isSelect() && o.SlaveDB() != nil {
+		return o.SlaveDB()
+	}
+	return o.MasterDB()
 }
 
 // Create for a model instance creation
@@ -276,7 +292,7 @@ func (o *Orm) Begin() *Orm {
 		sp := SavePoint{name: c.tx.parent.name}
 		c.tx.AddSavePoint(sp)
 	} else {
-		tx, err := c.masterDB.Begin()
+		tx, err := c.ExecutorDB().Begin()
 		checkError(err)
 		c.tx = Tx{
 			tx:   tx,
@@ -345,19 +361,19 @@ func (o *Orm) Exec(rawSQL string) error {
 	if o.inTransaction() {
 		_, err = o.tx.Exec(rawSQL)
 	} else {
-		_, err = o.masterDB.Exec(rawSQL)
+		_, err = o.ExecutorDB().Exec(rawSQL)
 	}
 	return err
 }
 
 // QueryRow wrap of the db QueryRow
 func (o *Orm) QueryRow(rawSQL string) *sql.Row {
-	return o.masterDB.QueryRow(rawSQL)
+	return o.ExecutorDB().QueryRow(rawSQL)
 }
 
 // Query wrap of the db Query
 func (o *Orm) Query(rawSQL string) (*sql.Rows, error) {
-	return o.masterDB.Query(rawSQL)
+	return o.ExecutorDB().Query(rawSQL)
 }
 
 func (o *Orm) String() string {
@@ -366,8 +382,7 @@ func (o *Orm) String() string {
 
 func (o *Orm) clone() *Orm {
 	return &Orm{
-		masterDB:      o.masterDB,
-		slaveDBs:      o.slaveDBs,
+		pool:          pool,
 		callbacks:     o.callbacks,
 		withCallbacks: o.withCallbacks,
 		model:         o.model,

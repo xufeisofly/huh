@@ -1,14 +1,15 @@
 * Huh?
 
-  A light weight MySQL ORM library for Golang.
+  Huh is designed to be a light-weight, full-featured and user-friendly ORM library for Golang.
   
 ** Overview
    - Basic CRUD support
    - Callback hooks (BeforeCreate, AfterCreate etc.)
    - Transactions and Embeded transactions
    - SQL Builder
-   - TODO Master & Slave DB seperation
-   - TODO Multiple dialect support
+   - Master & Slave DB support
+   - TODO query cache
+   - TODO multiple database dialect support
 
 ** Getting Started
 
@@ -29,6 +30,7 @@ huh.Config("mysql", huh.DBConfig{
 		"slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
 	},
 })
+defer huh.Close()
 #+END_SRC
 
 	Set max connections, idle connections and connection life time.
@@ -245,10 +247,3 @@ fmt.Println(sql)
 # => INSERT INTO `users` (`id`, `email`, `created_at`, `updated_at`) VALUES (1, "sofly@huh.com", "2019-01-01 00:00:00", "2019-01-01 00:00:00")
 #+END_SRC
 
-** TODOs
-
-****** TODO error handlers
-****** TODO master and slave support
-****** TODO stability
-****** TODO connection pool
-****** TODO redis query cache

@@ -1,6 +1,6 @@
 * Huh?
 
-  Huh is designed to be a heavy-weight, full-featured and user-friendly ORM library for Golang.
+  Huh is designed to be a light-weight, full-featured and user-friendly ORM library for Golang.
   
 ** Overview
    - Basic CRUD support

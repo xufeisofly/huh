@@ -217,3 +217,10 @@ func (o *Orm) setOutputResult(output reflect.Value, data map[string]string) erro
 	}
 	return nil
 }
+
+func (o *Orm) isSelect() bool {
+	if o.operator == OperatorSelect {
+		return true
+	}
+	return false
+}

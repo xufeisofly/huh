@@ -29,6 +29,7 @@ huh.Config("mysql", huh.DBConfig{
 		"slave1:pwd@localhost/mysite?charset=utf8&parseTime=True&loc=local",
 	},
 })
+defer huh.Close()
 #+END_SRC
 
 	Set max connections, idle connections and connection life time.

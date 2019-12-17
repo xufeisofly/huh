@@ -8,7 +8,12 @@
    - Transactions and Embeded transactions
    - SQL Builder
    - Master & Slave DB support
+   - TODO Raw sql execution
+   - TODO Explain and index usage checker
+   - TODO database migration and schema auto-generate
    - TODO query cache
+   - TODO validator
+   - TODO table relationships
    - TODO multiple database dialect support
 
 ** Getting Started
